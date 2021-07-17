@@ -4,6 +4,7 @@ import io.kotest.core.factory.FactoryId
 import io.kotest.core.SourceRef
 import io.kotest.core.config.configuration
 import io.kotest.core.plan.Descriptor
+import io.kotest.core.sourceRef
 import io.kotest.core.spec.Spec
 
 /**
@@ -20,12 +21,32 @@ data class NestedTest(
    val descriptor: Descriptor.TestDescriptor?,
 )
 
+fun createNestedTest(
+   name: DescriptionName.TestName,
+   xdisabled: Boolean,
+   config: TestCaseConfig,
+   type: TestType,
+   descriptor: Descriptor.TestDescriptor?,
+   factoryId: FactoryId?,
+   test: suspend TestContext.() -> Unit,
+) = NestedTest(
+   name = name,
+   test = test,
+   config = if (xdisabled) config.copy(enabled = false) else config,
+   type = type,
+   sourceRef = sourceRef(),
+   factoryId = factoryId,
+   descriptor = descriptor
+)
+
 /**
  * Returns a full [TestCase] from this nested test, attaching the nested test to the given spec.
+ *
+ * @param name override the name or can be null to use the original name
  */
-fun NestedTest.toTestCase(spec: Spec, parent: TestCase): TestCase {
+fun NestedTest.toTestCase(spec: Spec, parent: TestCase, name: DescriptionName.TestName? = null): TestCase {
    val testCase = TestCase(
-      description = parent.description.append(this.name, type),
+      description = parent.description.append(name ?: this.name, type),
       spec = spec,
       test = test,
       source = sourceRef,

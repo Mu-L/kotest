@@ -2,6 +2,7 @@
 
 package io.kotest.core.config
 
+import io.kotest.common.ExperimentalKotest
 import io.kotest.core.extensions.Extension
 import io.kotest.core.extensions.TestCaseExtension
 import io.kotest.core.filter.Filter
@@ -11,6 +12,7 @@ import io.kotest.core.listeners.TestListener
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.SpecExecutionOrder
 import io.kotest.core.test.AssertionMode
+import io.kotest.core.test.DuplicateTestNameMode
 import io.kotest.core.test.TestCaseConfig
 import io.kotest.core.test.TestCaseOrder
 import io.kotest.core.test.TestNameCase
@@ -195,12 +197,24 @@ class Configuration {
    var invocationTimeout: Long = Defaults.defaultInvocationTimeoutInMillis
 
    /**
+    * A timeout that is applied to the overall project if not null,
+    * if the sum duration of all the tests exceeds this the suite will fail.
+    * TODO: make this a [kotlin.time.Duration] when that API stabilizes
+    */
+   var projectTimeout: Long = Long.MAX_VALUE
+
+   /**
     * Returns the default [TestCaseConfig] to be assigned to tests when not specified either in
     * the spec, test factory, or test case itself.
     *
     * If this is null, then defaults to [Defaults.testCaseConfig]
     */
    var defaultTestConfig: TestCaseConfig = Defaults.testCaseConfig
+
+   /**
+    * If set to true, then will cause the test suite to fail if there were no executed tests.
+    */
+   var failOnEmptyTestSuite: Boolean = Defaults.failOnEmptyTestSuite
 
    /**
     * Some specs have DSLs that include prefix or suffix words in the test name.
@@ -259,6 +273,14 @@ class Configuration {
    var removeTestNameWhitespace: Boolean = false
 
    var testNameAppendTags: Boolean = false
+
+   /**
+    * Controls what to do when a duplicated test name is discovered.
+    * See possible settings in [DuplicateTestNameMode].
+    *
+    * Defaults to [Defaults.duplicateTestNameMode]
+    */
+   var duplicateTestNameMode: DuplicateTestNameMode = Defaults.duplicateTestNameMode
 
    /**
     * Returns all globally registered [Listener]s.

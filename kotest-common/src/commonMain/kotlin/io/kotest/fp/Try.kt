@@ -6,6 +6,7 @@ sealed class Try<out T> {
    data class Failure(val error: Throwable) : Try<Nothing>()
 
    companion object {
+      fun failure(error: String) = Failure(RuntimeException(error))
       operator fun invoke(t: Throwable): Try<Unit> = Failure(t)
       inline operator fun <T> invoke(f: () -> T): Try<T> = try {
          Success(f())
@@ -55,6 +56,9 @@ sealed class Try<out T> {
    inline fun mapFailure(f: (Throwable) -> Throwable) = fold({ f(it).failure() }, { it.success() })
 
    fun getOrNull(): T? = fold({ null }, { it })
+
+   fun valueOrNull(): T? = fold({ null }, { it })
+   fun errorOrNull(): Throwable? = fold({ it }, { null })
 }
 
 fun <T> Try<Try<T>>.flatten(): Try<T> = when (this) {

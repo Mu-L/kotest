@@ -2,7 +2,7 @@ plugins {
    id("java")
    kotlin("multiplatform")
    id("java-library")
-   id("org.jetbrains.kotlin.plugin.spring") version Libs.kotlinVersion
+   id("org.jetbrains.kotlin.plugin.spring")
    id("com.adarshr.test-logger")
 }
 
@@ -26,7 +26,7 @@ kotlin {
 
       val commonMain by getting {
          dependencies {
-            implementation(kotlin("stdlib"))
+            compileOnly(kotlin("stdlib"))
             implementation(kotlin("reflect"))
          }
       }

@@ -13,6 +13,7 @@ module.exports = {
       'proptest/proptestconfig',
       'proptest/customgens',
       'proptest/globalconfig',
+      'proptest/arrow',
    ],
    intellij: [
       'intellij/index',
@@ -33,6 +34,7 @@ module.exports = {
       'extensions/koin',
       'extensions/wiremock',
       'extensions/robolectric',
+      'extensions/pitest',
    ],
    assertions: [
       'assertions/index',
@@ -79,20 +81,28 @@ module.exports = {
       'framework/conditional_evaluation',
       'framework/isolation_mode',
       'framework/exceptions',
-      'framework/data_driven_testing',
+      {
+         type: "category",
+         label: "Data Driven Testing",
+         collapsed: false,
+         items: [
+            'framework/datatesting/introduction',
+            'framework/datatesting/nested',
+            'framework/datatesting/custom-test-names',
+         ]
+      },
       {
          type: "category",
          label: "Non-deterministic Testing",
          collapsed: false,
          items: [
-            'assertions/eventually',
+            'framework/concurrency/eventually',
             'assertions/continually',
             'assertions/until',
             'assertions/retry',
          ]
       },
       'framework/listeners',
-      'framework/plugins',
       {
          type: "category",
          label: "Integrations",

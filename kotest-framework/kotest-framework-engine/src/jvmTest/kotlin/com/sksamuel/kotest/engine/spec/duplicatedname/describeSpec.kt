@@ -1,30 +1,37 @@
 package com.sksamuel.kotest.engine.spec.duplicatedname
 
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.DuplicatedTestNameException
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 
-abstract class DescribeSpecDuplicateNameTest(iso: IsolationMode) : DescribeSpec() {
+abstract class DescribeSpecDuplicateTestNameModeInfoTest(iso: IsolationMode) : DescribeSpec() {
    init {
       isolationMode = iso
       describe("foo") {
          it("woo") {}
-         shouldThrow<DuplicatedTestNameException> {
-            it("woo") {}
-         }.message shouldBe "Cannot create test with duplicated name woo"
+         it("woo") {
+            this.testCase.displayName shouldBe "(1) woo"
+         }
+         it("woo") {
+            this.testCase.displayName shouldBe "(2) woo"
+         }
       }
-      shouldThrow<DuplicatedTestNameException> {
-         describe("foo") {}
+      describe("foo") {
+         this.testCase.displayName shouldBe "(1) foo"
+      }
+      describe("foo") {
+         this.testCase.displayName shouldBe "(2) foo"
       }
       context("goo") {}
-      shouldThrow<DuplicatedTestNameException> {
-         context("goo") {}
+      context("goo") {
+         this.testCase.displayName shouldBe "(1) goo"
+      }
+      context("goo") {
+         this.testCase.displayName shouldBe "(2) goo"
       }
    }
 }
 
-class DescribeSpecSingleInstanceDuplicateNameTest : DescribeSpecDuplicateNameTest(IsolationMode.SingleInstance)
-class DescribeSpecInstancePerLeafDuplicateNameTest : DescribeSpecDuplicateNameTest(IsolationMode.InstancePerLeaf)
-class DescribeSpecInstancePerTestDuplicateNameTest : DescribeSpecDuplicateNameTest(IsolationMode.InstancePerTest)
+class DescribeSpecSingleInstanceDuplicateTestNameModeInfoTest : DescribeSpecDuplicateTestNameModeInfoTest(IsolationMode.SingleInstance)
+class DescribeSpecInstancePerLeafDuplicateTestNameModeInfoTest : DescribeSpecDuplicateTestNameModeInfoTest(IsolationMode.InstancePerLeaf)
+class DescribeSpecInstancePerTestDuplicateTestNameModeInfoTest : DescribeSpecDuplicateTestNameModeInfoTest(IsolationMode.InstancePerTest)

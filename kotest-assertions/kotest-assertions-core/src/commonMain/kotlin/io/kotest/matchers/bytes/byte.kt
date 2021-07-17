@@ -9,8 +9,8 @@ fun Byte.shouldBeBetween(lower: Byte, upper: Byte): Byte {
    return this
 }
 
-fun between(lower: Byte, upper: Byte) = object : Matcher<Int> {
-   override fun test(value: Int) = MatcherResult(
+fun between(lower: Byte, upper: Byte) = object : Matcher<Byte> {
+   override fun test(value: Byte) = MatcherResult(
       value in lower..upper,
       "$value should be between ($lower, $upper) inclusive",
       "$value should not be between ($lower, $upper) inclusive"

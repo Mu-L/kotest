@@ -4,17 +4,36 @@ package io.kotest.mpp
 
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
-import kotlin.reflect.full.createType
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.jvm.jvmName
 import kotlin.reflect.jvm.reflect
 
 object JvmReflection : Reflection {
 
-   override fun fqn(kclass: KClass<*>): String? = kclass.qualifiedName
+   private val fqns = mutableMapOf<KClass<*>, String?>()
+   private val annotations = mutableMapOf<KClass<*>, List<Annotation>>()
 
-   override fun annotations(kclass: KClass<*>): List<Annotation> = try {
-      kclass.annotations
+   override fun fqn(kclass: KClass<*>): String? = fqns.getOrPut(kclass) { kclass.qualifiedName }
+
+   override fun annotations(kclass: KClass<*>, recursive: Boolean): List<Annotation> {
+      return if (recursive) return annotations(kclass, emptySet()) else kclass.annotationsSafe()
+   }
+
+   private fun annotations(kclass: KClass<*>, checked: Set<String>): List<Annotation> {
+      return annotations.getOrPut(kclass) {
+         val annos = kclass.annotations
+         annos + annos.flatMap {
+            // we don't want to get into a loop with annotations that annotate themselves
+            if (checked.contains(it.annotationClass.jvmName)) emptyList() else {
+               annotations(it.annotationClass, checked + it.annotationClass.jvmName)
+            }
+         }
+      }
+   }
+
+   private fun KClass<*>.annotationsSafe(): List<Annotation> = try {
+      this.annotations
    } catch (e: Exception) {
       emptyList()
    }
@@ -38,6 +57,8 @@ object JvmReflection : Reflection {
       }
    }
 
+   // ignored because on JDK 8 newInstance is the only option
+   @Suppress("DEPRECATION")
    override fun <T : Any> newInstanceNoArgConstructor(klass: KClass<T>): T {
       return klass.java.newInstance()
    }

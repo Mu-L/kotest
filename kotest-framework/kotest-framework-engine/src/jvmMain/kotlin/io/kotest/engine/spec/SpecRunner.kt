@@ -2,7 +2,6 @@ package io.kotest.engine.spec
 
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.Spec
-import io.kotest.core.spec.materializeAndOrderRootTests
 import io.kotest.core.test.TestCase
 import io.kotest.core.test.TestResult
 import io.kotest.engine.launchers.TestLauncher
@@ -40,7 +39,7 @@ abstract class SpecRunner(
     */
    protected suspend fun launch(spec: Spec, run: suspend (TestCase) -> Unit) {
       val rootTests = spec.materializeAndOrderRootTests().map { it.testCase }
-      log("SingleInstanceSpecRunner: Launching ${rootTests.size} root tests with launcher $launcher")
+      log { "SingleInstanceSpecRunner: Launching ${rootTests.size} root tests with launcher $launcher" }
       launcher.launch(run, rootTests)
    }
 
@@ -56,7 +55,7 @@ abstract class SpecRunner(
          Try { listener.specInstantiationError(kclass, it) }
       }
 
-   @Deprecated("Explicit thread mode will be removed in 4.6")
+   @Deprecated("Explicit thread mode Will be removed in 4.7")
    protected suspend fun runParallel(threads: Int, testCases: Collection<TestCase>, run: suspend (TestCase) -> Unit) {
 
       val executor = Executors.newFixedThreadPool(threads, NamedThreadFactory("SpecRunner-%d"))
@@ -69,12 +68,12 @@ abstract class SpecRunner(
          }
       }
       executor.shutdown()
-      log("Waiting for test case execution to terminate")
+      log { "Waiting for test case execution to terminate" }
 
       try {
          executor.awaitTermination(1, TimeUnit.DAYS)
       } catch (t: InterruptedException) {
-         log("Test case execution interrupted", t)
+         log(t) { "Test case execution interrupted" }
          throw t
       }
 

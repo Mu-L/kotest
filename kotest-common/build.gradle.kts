@@ -30,7 +30,12 @@ kotlin {
 
       macosX64()
       tvos()
-//      watchos()
+
+      watchosArm32()
+      watchosArm64()
+      watchosX86()
+      watchosX64()
+
       iosX64()
       iosArm64()
       iosArm32()
@@ -40,14 +45,16 @@ kotlin {
 
       val commonMain by getting {
          dependencies {
-            implementation(kotlin("stdlib"))
+            compileOnly(kotlin("stdlib"))
             implementation(kotlin("reflect"))
-            implementation(Libs.Coroutines.coreCommon)
          }
       }
 
       val jvmMain by getting {
          dependsOn(commonMain)
+         dependencies {
+            implementation(Libs.Coroutines.coreJvm)
+         }
       }
 
       val desktopMain by creating {
@@ -78,17 +85,38 @@ kotlin {
          dependsOn(desktopMain)
       }
 
-//      val watchosMain by getting {
-//         dependsOn(desktopMain)
-//      }
+      val watchosX86Main by getting {
+         dependsOn(desktopMain)
+      }
+
+      val watchosArm32Main by getting {
+         dependsOn(desktopMain)
+      }
+
+      val watchosArm64Main by getting {
+         dependsOn(desktopMain)
+      }
+
+      val watchosX64Main by getting {
+         dependsOn(desktopMain)
+      }
 
       val tvosMain by getting {
          dependsOn(desktopMain)
       }
 
+      val jvmTest by getting {
+         dependencies {
+            implementation(project(Projects.Engine))
+            implementation(project(Projects.JunitRunner))
+         }
+      }
+
       all {
          languageSettings.useExperimentalAnnotation("kotlin.time.ExperimentalTime")
          languageSettings.useExperimentalAnnotation("kotlin.experimental.ExperimentalTypeInference")
+         languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
+         languageSettings.useExperimentalAnnotation("kotlin.reflect.jvm.ExperimentalReflectionOnLambdas")
       }
    }
 }

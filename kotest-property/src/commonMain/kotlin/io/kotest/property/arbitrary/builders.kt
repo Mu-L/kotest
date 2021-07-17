@@ -1,9 +1,6 @@
 package io.kotest.property.arbitrary
 
-import io.kotest.fp.Option
-import io.kotest.fp.some
 import io.kotest.property.*
-import kotlin.jvm.JvmName
 
 /**
  * Creates a new [Arb] that performs no shrinking, has no edge cases and
@@ -17,9 +14,8 @@ fun <A> arbitrary(fn: (RandomSource) -> A): Arb<A> =
  * generates values from the given function.
  */
 fun <A> arbitrary(edgecases: List<A>, fn: (RandomSource) -> A): Arb<A> = object : Arb<A>() {
-   override fun edgecases(): List<A> = edgecases
+   override fun edgecase(rs: RandomSource): A? = if (edgecases.isEmpty()) null else edgecases.random(rs.random)
    override fun sample(rs: RandomSource): Sample<A> = Sample(fn(rs))
-   override fun values(rs: RandomSource): Sequence<Sample<A>> = generateSequence { Sample(fn(rs)) }
 }
 
 /**
@@ -27,42 +23,32 @@ fun <A> arbitrary(edgecases: List<A>, fn: (RandomSource) -> A): Arb<A> = object 
  * generates values from the given function.
  */
 fun <A> arbitrary(edgecases: List<A>, shrinker: Shrinker<A>, fn: (RandomSource) -> A): Arb<A> = object : Arb<A>() {
-   override fun edgecases(): List<A> = edgecases
+   override fun edgecase(rs: RandomSource): A? = if (edgecases.isEmpty()) null else edgecases.random(rs.random)
    override fun sample(rs: RandomSource): Sample<A> = sampleOf(fn(rs), shrinker)
-   override fun values(rs: RandomSource): Sequence<Sample<A>> = generateSequence { sampleOf(fn(rs), shrinker) }
 }
 
 /**
- * Creates a new [Arb] using the given edgecase generator and generates samples from the given sample generator.
+ * Creates a new [Arb] that generates edge cases from the given [edgecaseFn] function
+ * and generates samples from the given [sampleFn] function.
  */
-internal fun <A> arbitrary(edgecaseGenerator: EdgeConfig.(RandomSource) -> A, sampleGenerator: (RandomSource) -> A): Arb<A> =
+fun <A> arbitrary(edgecaseFn: (RandomSource) -> A?, sampleFn: (RandomSource) -> A): Arb<A> =
    object : Arb<A>() {
-      override fun edgecases(): List<A> = emptyList()
-      override fun edges(): Option<Edgecase<A>> = Edgecase { rs, config ->
-         config.edgecaseGenerator(rs)
-      }.some()
-
-      override fun sample(rs: RandomSource): Sample<A> = Sample(sampleGenerator(rs))
-      override fun values(rs: RandomSource): Sequence<Sample<A>> = generateSequence { Sample(sampleGenerator(rs)) }
+      override fun edgecase(rs: RandomSource): A? = edgecaseFn(rs)
+      override fun sample(rs: RandomSource): Sample<A> = Sample(sampleFn(rs))
    }
 
 /**
- * Creates a new [Arb] that performs shrinking using the supplied [Shrinker],
- * generates edgecases using the given edgecase generator,
- * and generates samples from the given sample generator.
+ * Creates a new [Arb] that generates edge cases from the given [edgecaseFn] function,
+ * performs shrinking using the supplied [Shrinker, and generates samples from the given [sampleFn] function.
  */
-internal fun <A> arbitrary(
+fun <A> arbitrary(
+   edgecaseFn: (RandomSource) -> A?,
    shrinker: Shrinker<A>,
-   edgecaseGenerator: EdgeConfig.(RandomSource) -> A,
-   sampleGenerator: (RandomSource) -> A
+   sampleFn: (RandomSource) -> A
 ): Arb<A> =
    object : Arb<A>() {
-      override fun edgecases(): List<A> = emptyList()
-      override fun edges(): Option<Edgecase<A>> = Edgecase { rs, config ->
-         config.edgecaseGenerator(rs)
-      }.some()
-      override fun sample(rs: RandomSource): Sample<A> = sampleOf(sampleGenerator(rs), shrinker)
-      override fun values(rs: RandomSource): Sequence<Sample<A>> = generateSequence { Sample(sampleGenerator(rs)) }
+      override fun edgecase(rs: RandomSource): A? = edgecaseFn(rs)
+      override fun sample(rs: RandomSource): Sample<A> = sampleOf(sampleFn(rs), shrinker)
    }
 
 /**
@@ -71,92 +57,6 @@ internal fun <A> arbitrary(
  */
 fun <A> arbitrary(shrinker: Shrinker<A>, fn: (RandomSource) -> A): Arb<A> =
    arbitrary(emptyList(), shrinker, fn)
-
-/**
- * Creates a new [Arb] that performs shrinking using the supplied shrinker and generates each value
- * from successive invocations of the given function f.
- */
-@Deprecated(
-   "use arbitrary(). This function will be removed in 4.6",
-   ReplaceWith("arbitrary(fn)")
-)
-fun <A> arb(fn: (RandomSource) -> A): Arb<A> =
-   arbitrary(fn)
-
-/**
- * Creates a new [Arb] that performs no shrinking, uses the supplied edge case values,
- * and generates values from the given function that is invoked once to return a sequence of values.
- */
-@Deprecated(
-   "This function will no longer accept Sequence<A>. Use arbitrary with (RandomSource -> A) for compatibility. This function will be removed in 4.6"
-)
-@JvmName("arbSequence")
-fun <A> arb(edgecases: List<A> = emptyList(), fn: (RandomSource) -> Sequence<A>) = object : Arb<A>() {
-   override fun edgecases(): List<A> = edgecases
-   override fun values(rs: RandomSource): Sequence<Sample<A>> = fn(rs).map { Sample(it) }
-   override fun sample(rs: RandomSource): Sample<A> = Sample(fn(rs).first())
-}
-
-/**
- * Creates a new [Arb] that performs shrinking using the supplier shrinker, uses the
- * supplied edge case values, and provides values from sequence returning function.
- */
-@Deprecated(
-   "This function will no longer accept Sequence<A>. Use arbitrary with (RandomSource -> A) for compatibility. This function will be removed in 4.6"
-)
-@JvmName("arbSequence")
-fun <A> arb(
-   edgecases: List<A> = emptyList(),
-   shrinker: Shrinker<A>,
-   fn: (RandomSource) -> Sequence<A>
-) = object : Arb<A>() {
-   override fun edgecases(): List<A> = edgecases
-   override fun values(rs: RandomSource): Sequence<Sample<A>> = fn(rs).map { sampleOf(it, shrinker) }
-   override fun sample(rs: RandomSource): Sample<A> = sampleOf(fn(rs).first(), shrinker)
-}
-
-/**
- * Creates a new [Arb] that performs shrinking using the supplied shrinker and generates each value
- * from successive invocations of the given function f.
- */
-@Deprecated(
-   "Use arbitrary with (RandomSource -> A). This function will be removed in 4.6",
-   ReplaceWith("arbitrary(shrinker, fn)")
-)
-fun <A> arb(shrinker: Shrinker<A>, fn: (RandomSource) -> A): Arb<A> =
-   arbitrary(shrinker, fn)
-
-/**
- * Creates a new [Arb] with the given edgecases, that performs shrinking using the supplied shrinker and
- * generates each value from successive invocations of the given function f.
- */
-@Deprecated(
-   "Use arbitrary with (RandomSource -> A). This function will be removed in 4.6",
-   ReplaceWith("arbitrary(edgecases, shrinker, fn)")
-)
-fun <A> arb(shrinker: Shrinker<A>, edgecases: List<A> = emptyList(), fn: (RandomSource) -> A): Arb<A> =
-   arbitrary(edgecases, shrinker, fn)
-
-/**
- * Creates a new [Arb] with the given edgecases, that performs shrinking using the supplied shrinker and
- * generates each value from successive invocations of the given function f.
- */
-@Deprecated(
-   "Use arbitrary with (RandomSource -> A). This function will be removed in 4.6",
-   ReplaceWith("arbitrary(edgecases, fn)")
-)
-fun <A> arb(edgecases: List<A> = emptyList(), fn: (RandomSource) -> A): Arb<A> =
-   arbitrary(edgecases, fn)
-
-/**
- * Returns an [Arb] where each value is generated from the given function.
- */
-@Deprecated(
-   "Use arbitrary with (RandomSource -> A). This function will be removed in 4.6",
-   ReplaceWith("arbitrary(edgeCases, fn)")
-)
-fun <A> Arb.Companion.create(edgeCases: List<A> = emptyList(), fn: (RandomSource) -> A): Arb<A> =
-   arbitrary(edgeCases, fn)
 
 /**
  * Returns an [Arb] which repeatedly generates a single value.

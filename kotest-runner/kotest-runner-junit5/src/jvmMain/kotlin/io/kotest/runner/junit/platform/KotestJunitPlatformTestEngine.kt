@@ -4,6 +4,7 @@ import io.kotest.core.config.configuration
 import io.kotest.core.extensions.DiscoveryExtension
 import io.kotest.core.filter.TestFilter
 import io.kotest.core.filter.TestFilterResult
+import io.kotest.core.internal.KotestEngineProperties
 import io.kotest.core.spec.Spec
 import io.kotest.core.spec.toDescription
 import io.kotest.engine.KotestEngineLauncher
@@ -46,7 +47,7 @@ class KotestJunitPlatformTestEngine : TestEngine {
    override fun getGroupId(): Optional<String> = Optional.of("io.kotest")
 
    override fun execute(request: ExecutionRequest) = runBlocking {
-      log("JUnit ExecutionRequest[${request::class.java.name}] [configurationParameters=${request.configurationParameters}; rootTestDescriptor=${request.rootTestDescriptor}]")
+      log { "JUnit ExecutionRequest[${request::class.java.name}] [configurationParameters=${request.configurationParameters}; rootTestDescriptor=${request.rootTestDescriptor}]" }
       val root = request.rootTestDescriptor as KotestEngineDescriptor
       when (root.error) {
           null -> execute(request, root)
@@ -75,8 +76,8 @@ class KotestJunitPlatformTestEngine : TestEngine {
          .withListener(listener)
          .withSpecs(root.classes)
          .withScripts(root.scripts)
-         .withDumpConfig(true)
-         .withFilters(root.testFilters)
+         .withDumpConfig(shouldDumpConfig())
+         .withTestFilters(root.testFilters)
          .launch()
    }
 
@@ -94,8 +95,8 @@ class KotestJunitPlatformTestEngine : TestEngine {
       request: EngineDiscoveryRequest,
       uniqueId: UniqueId,
    ): KotestEngineDescriptor {
-      log("uniqueId=$uniqueId")
-      log(request.string())
+      log { "JUnit discovery request [uniqueId=$uniqueId]" }
+      log { request.string() }
 
       // if we are excluded from the engines then we say goodnight according to junit rules
       val isKotest = request.engineFilters().all { it.toPredicate().test(this) }
@@ -110,7 +111,7 @@ class KotestJunitPlatformTestEngine : TestEngine {
       // this happens for example, when trying to run a junit test alongside kotest tests,
       // and kotest will then run all other tests.
       // therefore, the presence of a MethodSelector means we must run no tests in KT.
-      return if (request.getSelectorsByType(MethodSelector::class.java).isEmpty()) {
+      val descriptor =  if (request.getSelectorsByType(MethodSelector::class.java).isEmpty()) {
 
          val extensions = listOf(
             IgnoredSpecDiscoveryExtension,
@@ -122,12 +123,16 @@ class KotestJunitPlatformTestEngine : TestEngine {
          val classes = result.specs.filter { spec ->
             testFilters.all { it.filter(spec.toDescription()) == TestFilterResult.Include }
          }
-         discovery.close()
          KotestEngineDescriptor(uniqueId, classes, result.scripts, testFilters, result.error)
       } else {
          KotestEngineDescriptor(uniqueId, emptyList(), emptyList(), emptyList(), null)
       }
+
+      log { "JUnit discovery completed [descriptor=$descriptor]" }
+      return descriptor
    }
+
+   private fun shouldDumpConfig() = System.getProperty(KotestEngineProperties.dumpConfig) == "true"
 }
 
 class KotestEngineDescriptor(

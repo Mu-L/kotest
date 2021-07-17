@@ -27,7 +27,7 @@ fun execute(
    specFQN: String?,
    testPath: String?,
    tags: Tags?,
-   dumpconfig: Boolean = true,
+   dumpconfig: Boolean,
 ) {
    setupLauncher(specFQN, packageName, testPath, tags, dumpconfig, reporter)
       .fold(
@@ -51,7 +51,7 @@ private fun setupLauncher(
    packageName: String?,
    testPath: String?,
    tags: Tags?,
-   dumpconfig: Boolean = true,
+   dumpconfig: Boolean,
    reporter: Reporter
 ): Try<KotestEngineLauncher> = Try {
 
@@ -63,11 +63,9 @@ private fun setupLauncher(
 
    if (error != null) throw error
 
-   KotestEngineLauncher()
-      .withListener(ReporterTestEngineListener(reporter))
-      .withSpecs(specs)
-      .withTags(tags)
-      .withFilters(listOfNotNull(filter))
+   KotestEngineLauncher
+      .default(listOf(ReporterTestEngineListener(reporter)), specs, tags)
+      .withTestFilters(listOfNotNull(filter))
       .withDumpConfig(dumpconfig)
 }
 
@@ -94,7 +92,5 @@ private fun scan(packageName: String?): DiscoveryResult {
       TagsExcludedDiscoveryExtension,
    ) + configuration.extensions().filterIsInstance<DiscoveryExtension>()
    val discovery = Discovery(extensions)
-   val result = discovery.discover(req)
-   discovery.close()
-   return result
+   return discovery.discover(req)
 }

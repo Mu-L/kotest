@@ -29,8 +29,7 @@ kotlin {
 
       val commonMain by getting {
          dependencies {
-            implementation(kotlin("stdlib"))
-            implementation(kotlin("reflect"))
+            compileOnly(kotlin("stdlib"))
             implementation(Libs.Coroutines.coreCommon)
             implementation(Libs.Ktor.clientCore)
          }
@@ -55,7 +54,8 @@ kotlin {
          dependencies {
             implementation(project(Projects.JunitRunner))
             implementation(project(Projects.AssertionsCore))
-            implementation(project(Projects.MockServer))
+            implementation(Libs.MockServer.netty)
+            implementation(Libs.Kotest.Extensions.MockServer)
          }
       }
 

@@ -4,9 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.data.blocking.forAll
 import io.kotest.data.row
 import io.kotest.inspectors.forAll
-import io.kotest.matchers.ints.shouldBeBetween
-import io.kotest.matchers.ints.shouldBeGreaterThan
-import io.kotest.matchers.ints.shouldBePositive
+import io.kotest.matchers.ints.*
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.PropTest
@@ -15,7 +13,6 @@ import io.kotest.property.checkAll
 import io.kotest.property.checkCoverage
 
 class IntTest : FunSpec({
-
    test("<Int, Int> should give values between min and max inclusive") {
       // Test parameters include the test for negative bounds
       forAll(
@@ -26,29 +23,12 @@ class IntTest : FunSpec({
          row(Int.MIN_VALUE, Int.MIN_VALUE + 10)
       ) { vMin, vMax ->
          val expectedValues = (vMin..vMax).toSet()
-         val actualValues = (1..100000).map { Arb.int(vMin, vMax).single() }.toSet()
-
+         val actualValues = (1..100_000).map { Arb.int(vMin, vMax).single() }.toSet()
          actualValues shouldBe expectedValues
       }
    }
 
-   test("<Long, Long> should give values between min and max inclusive") {
-      // Test parameters include the test for negative bounds
-      forAll(
-         row(-10L, -1L),
-         row(1L, 3L),
-         row(-100L, 100L),
-         row(Long.MAX_VALUE - 10L, Long.MAX_VALUE),
-         row(Long.MIN_VALUE, Long.MIN_VALUE + 10L)
-      ) { vMin, vMax ->
-         val expectedValues = (vMin..vMax).toSet()
-         val actualValues = (1..100000).map { Arb.long(vMin, vMax).single() }.toSet()
-
-         actualValues shouldBe expectedValues
-      }
-   }
-
-   test("edgecases should respect min and max bounds") {
+   test("Arb.int edge cases should respect min and max bounds") {
       checkCoverage("run", 25.0) {
          PropTest(iterations = 1000).checkAll<Int, Int> { min, max ->
             if (min < max) {
@@ -61,11 +41,51 @@ class IntTest : FunSpec({
       }
    }
 
-   test("Arb.nats should return positive ints only") {
-      val nats = Arb.nats().take(1000).toSet()
-      nats.forAll {
-         it.shouldBePositive()
+   test("Arb.positiveInts should return positive ints only") {
+      val numbers = Arb.positiveInt().take(1000).toSet()
+      numbers.forAll { it.shouldBePositive() }
+   }
+
+   test("Arb.nonNegativeInts should return non negative ints only") {
+      val numbers = Arb.nonNegativeInt().take(1000).toSet()
+      numbers.forAll { it.shouldBeNonNegative() }
+   }
+
+   test("Arb.negativeInts should return negative ints only") {
+      val numbers = Arb.negativeInt().take(1000).toSet()
+      numbers.forAll { it.shouldBeNegative() }
+   }
+
+   test("Arb.nonPositiveInts should return non positive ints only") {
+      val numbers = Arb.nonPositiveInt().take(1000).toSet()
+      numbers.forAll { it.shouldBeNonPositive() }
+   }
+})
+
+class UIntTest : FunSpec({
+   test("<UInt, UInt> should give values between min and max inclusive") {
+      forAll(
+         row(1u, 3u),
+         row(0u, 100u),
+         row(UInt.MAX_VALUE - 10u, UInt.MAX_VALUE),
+         row(UInt.MIN_VALUE, UInt.MIN_VALUE + 10u)
+      ) { vMin, vMax ->
+         val expectedValues = (vMin..vMax).toSet()
+         val actualValues = (1..100_000).map { Arb.uInt(vMin, vMax).single() }.toSet()
+         actualValues shouldBe expectedValues
       }
-      nats.size.shouldBeGreaterThan(50)
+   }
+
+   test("Arb.uInt edge cases should respect min and max bounds") {
+      checkCoverage("run", 25.0) {
+         PropTest(iterations = 1000).checkAll<UInt, UInt> { min, max ->
+            if (min < max) {
+               classify("run")
+               Arb.uInt(min..max).edgecases().forAll {
+                  it.shouldBeBetween(min, max)
+               }
+            }
+         }
+      }
    }
 })

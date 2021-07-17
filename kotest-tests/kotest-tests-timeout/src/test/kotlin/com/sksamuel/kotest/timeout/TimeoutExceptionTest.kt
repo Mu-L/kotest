@@ -4,8 +4,9 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.core.test.TestResult
 import io.kotest.core.test.TestStatus
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldEndWith
 import kotlinx.coroutines.delay
-import kotlin.time.milliseconds
+import kotlin.time.Duration
 
 // tests that the values in the timeout exception are populated correctly
 class SpecInvocationTimeoutExceptionTest : FunSpec() {
@@ -15,12 +16,12 @@ class SpecInvocationTimeoutExceptionTest : FunSpec() {
       invocationTimeout = 10 // millis
 
       test("timeout exception should use the value that caused the test to fail") {
-         delay(250.milliseconds)
+         delay(Duration.milliseconds(250))
       }
 
       aroundTest { (test, execute) ->
          val result = execute(test)
-         result.error?.message shouldBe "Test did not complete within 10ms"
+         result.error?.message shouldBe "Test 'timeout exception should use the value that caused the test to fail' did not complete within 10ms"
          TestResult.success(0)
       }
    }
@@ -33,21 +34,25 @@ class TestInvocationTimeoutExceptionTest : FunSpec() {
       timeout = 965
       invocationTimeout = 800 // millis
 
-      test("timeout exception should use the value that caused the test to fail 1").config(invocationTimeout = 44.milliseconds) {
-         delay(500.milliseconds)
+      test("timeout exception should use the value that caused the test to fail 1").config(
+         invocationTimeout = Duration.milliseconds(
+            44
+         )
+      ) {
+         delay(Duration.milliseconds(500))
       }
 
       test("timeout exception should use the value that caused the test to fail 2").config(
-         timeout = 454.milliseconds,
-         invocationTimeout = 44.milliseconds
+         timeout = Duration.milliseconds(454),
+         invocationTimeout = Duration.milliseconds(44)
       ) {
-         delay(500.milliseconds)
+         delay(Duration.milliseconds(500))
       }
 
       aroundTest { (test, execute) ->
          val result = execute(test)
          (result.status == TestStatus.Failure || result.status == TestStatus.Error) shouldBe true
-         result.error?.message shouldBe "Test did not complete within 44ms"
+         result.error?.message.shouldEndWith(" did not complete within 44ms")
          TestResult.success(0)
       }
    }
@@ -61,12 +66,12 @@ class SpecTimeoutExceptionTest : FunSpec() {
       timeout = 21
 
       test("timeout exception should use the value that caused the test to fail") {
-         delay(100.milliseconds)
+         delay(Duration.milliseconds(100))
       }
 
       aroundTest { (test, execute) ->
          val result = execute(test)
-         result.error?.message shouldBe "Test did not complete within 21ms"
+         result.error?.message shouldBe "Test 'timeout exception should use the value that caused the test to fail' did not complete within 21ms"
          TestResult.success(0)
       }
    }
@@ -79,13 +84,17 @@ class TestTimeoutExceptionTest : FunSpec() {
 
       timeout = 250
 
-      test("timeout exception should use the value that caused the test to fail").config(timeout = 23.milliseconds) {
-         delay(100.milliseconds)
+      test("timeout exception should use the value that caused the test to fail").config(
+         timeout = Duration.milliseconds(
+            23
+         )
+      ) {
+         delay(Duration.milliseconds(100))
       }
 
       aroundTest { (test, execute) ->
          val result = execute(test)
-         result.error?.message shouldBe "Test did not complete within 23ms"
+         result.error?.message shouldBe "Test 'timeout exception should use the value that caused the test to fail' did not complete within 23ms"
          TestResult.success(0)
       }
    }

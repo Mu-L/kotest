@@ -11,7 +11,7 @@ import io.kotest.matchers.string.shouldStartWith
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.nio.file.Paths
-import kotlin.time.milliseconds
+import kotlin.time.Duration
 
 class FunSpecTest : FunSpec() {
 
@@ -30,8 +30,8 @@ class FunSpecTest : FunSpec() {
          }
       }
 
-      test("test with timeout").config(timeout = 1234.milliseconds) {
-         count += 1
+      test("test with timeout").config(timeout = Duration.milliseconds(1234)) {
+          count += 1
       }
 
       xtest("a disabled test") {
@@ -41,6 +41,12 @@ class FunSpecTest : FunSpec() {
       context("a context can hold tests") {
          test("foo") {
             "a".shouldNotBeBlank()
+         }
+         xtest("a disabled test inside the context") {
+            error("boom")
+         }
+         xtest("a disabled test with config").config(timeout = Duration.hours(1231)) {
+            error("boom")
          }
          context("and even other contexts!") {
             test("wibble") {
@@ -54,6 +60,10 @@ class FunSpecTest : FunSpec() {
          test("a dummy test") {
 
          }
+      }
+
+      xcontext("a disabled context!") {
+         error("boom")
       }
    }
 

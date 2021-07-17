@@ -32,7 +32,11 @@ kotlin {
 
       macosX64()
       tvos()
-//      watchos()
+
+      watchosArm32()
+      watchosArm64()
+      watchosX86()
+      watchosX64()
 
       iosX64()
       iosArm64()
@@ -43,7 +47,7 @@ kotlin {
 
       val commonMain by getting {
          dependencies {
-            implementation(kotlin("stdlib"))
+            compileOnly(kotlin("stdlib"))
             implementation(kotlin("reflect"))
             api(project(Projects.Common))
             api(project(Projects.AssertionsShared))
@@ -55,7 +59,7 @@ kotlin {
          dependsOn(commonMain)
          dependencies {
             implementation(Libs.Wumpz.diffutils)
-            implementation(Libs.Mifmif.generex)
+            implementation(Libs.rgxgen.rgxgen)
          }
       }
 
@@ -95,9 +99,21 @@ kotlin {
          dependsOn(desktopMain)
       }
 
-//      val watchosMain by getting {
-//         dependsOn(desktopMain)
-//      }
+      val watchosArm32Main by getting {
+         dependsOn(desktopMain)
+      }
+
+      val watchosArm64Main by getting {
+         dependsOn(desktopMain)
+      }
+
+      val watchosX86Main by getting {
+         dependsOn(desktopMain)
+      }
+
+      val watchosX64Main by getting {
+         dependsOn(desktopMain)
+      }
 
       val tvosMain by getting {
          dependsOn(desktopMain)
@@ -112,7 +128,7 @@ kotlin {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
    kotlinOptions.jvmTarget = "1.8"
-   kotlinOptions.apiVersion = "1.4"
+   kotlinOptions.apiVersion = "1.5"
 }
 
 tasks.named<Test>("jvmTest") {

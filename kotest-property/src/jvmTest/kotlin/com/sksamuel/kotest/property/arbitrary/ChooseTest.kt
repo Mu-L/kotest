@@ -21,10 +21,10 @@ class ChooseTest : FunSpec({
 
    test("Arb.choose should honour seed") {
       val seedListA =
-         Arb.choose(1 to 'A', 3 to 'B', 4 to 'C', 5 to 'D').values(684658365846L.random()).take(500).toList()
+         Arb.choose(1 to 'A', 3 to 'B', 4 to 'C', 5 to 'D').samples(684658365846L.random()).take(500).toList()
             .map { it.value }
       val seedListB =
-         Arb.choose(1 to 'A', 3 to 'B', 4 to 'C', 5 to 'D').values(684658365846L.random()).take(500).toList()
+         Arb.choose(1 to 'A', 3 to 'B', 4 to 'C', 5 to 'D').samples(684658365846L.random()).take(500).toList()
             .map { it.value }
       seedListA shouldBe seedListB
    }
@@ -39,7 +39,7 @@ class ChooseTest : FunSpec({
          val genCount = 100000
          val chooseGen = Arb.choose(weightPairs[0], weightPairs[1], *weightPairs.drop(2).toTypedArray())
          val actualCountsMap = (1..genCount).map { chooseGen.single() }.groupBy { it }.map { (k, v) -> k to v.count() }
-         val actualRatiosMap = actualCountsMap.map { (k, v) -> k to (v.toDouble() / genCount) }.toMap()
+         val actualRatiosMap = actualCountsMap.associate { (k, v) -> k to (v.toDouble() / genCount) }
 
          actualRatiosMap.keys shouldBe expectedRatiosMap.keys
 
@@ -78,7 +78,7 @@ class ChooseTest : FunSpec({
          val genCount = 100000
          val chooseGen = Arb.choose(weightPairs[0], weightPairs[1], *weightPairs.drop(2).toTypedArray())
          val actualCountsMap = (1..genCount).map { chooseGen.single() }.groupBy { it }.map { (k, v) -> k to v.count() }
-         val actualRatiosMap = actualCountsMap.map { (k, v) -> k to (v.toDouble() / genCount) }.toMap()
+         val actualRatiosMap = actualCountsMap.associate { (k, v) -> k to (v.toDouble() / genCount) }
 
          actualRatiosMap.keys shouldBe expectedRatiosMap.keys
 
@@ -100,30 +100,30 @@ class ChooseTest : FunSpec({
       shouldNotThrow<Exception> { Arb.choose(0 to Arb.constant('A'), 0 to Arb.constant('B'), 1 to Arb.constant('C')) }
    }
 
-   test("Arb.choose(arbs) should collate edgecases") {
+   test("Arb.choose(arbs) should collate edge cases") {
       val arb = Arb.choose(
          1 to Arb.constant('A').withEdgecases('a'),
          3 to Arb.constant('B').withEdgecases('b'),
          4 to Arb.constant('C').withEdgecases('c'),
          5 to Arb.constant('D').withEdgecases('d')
       )
-      val edgecases = arb
+      val edgeCases = arb
          .generate(RandomSource.seeded(1234L), EdgeConfig(edgecasesGenerationProbability = 1.0))
          .take(10)
          .map { it.value }
          .toList()
 
-      edgecases shouldContainExactly listOf(
-         'b',
+      edgeCases shouldContainExactly listOf(
+         'c',
          'c',
          'd',
-         'd',
-         'b',
-         'c',
-         'd',
-         'c',
          'a',
-         'd'
+         'b',
+         'a',
+         'd',
+         'd',
+         'a',
+         'b'
       )
    }
 })

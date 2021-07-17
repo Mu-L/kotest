@@ -13,21 +13,24 @@ slug: robolectric.html
 
 To add this module to project you need specify following in your `build.gradle`:
 
-[![Latest Release](https://img.shields.io/maven-central/v/io.kotest.extensions/kotest-extensions-robolectric)](https://search.maven.org/search?q=g:io.kotest.extensions%20a:kotest-extensions-robolectric)
+[![Latest Release](https://img.shields.io/maven-central/v/io.kotest.extensions/kotest-extensions-robolectric)](https://search.maven.org/artifact/io.kotest.extensions/kotest-extensions-robolectric)
 
 ```kotlin
 testImplementation("io.kotest.extensions:kotest-extensions-robolectric:${version}")
 ```
-With this dependency added you should add extensions to your project config. For example if you have no such config yet it would look like
+
+This dependency brings in `RobolectricExtension`, which is autoregistered to your projects.
+
+Now all you need to do is annotate Robolectric specs with `@RobolectricTest` and you're set!
 
 ```kotlin
-class MyProjectLevelConfig : AbstractProjectConfig() {
-    override fun extensions(): List<Extension> = super.extensions() + RobolectricExtension()
-}
+@RobolectricTest
+class MyTest : ShouldSpec({
+    should("Access Robolectric normally!") {
+    
+    }
+})
 ```
 
-Of course you can just add this extension to another extensions you're already using.
-
-After that done any class which should be ran with Robolectric should be annotated with `@RobolectricTest` annotation.
 
 

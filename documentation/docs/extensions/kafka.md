@@ -11,7 +11,7 @@ where using the kafka docker images are an issue.
 To use this extension add the `io.kotest.extensions:kotest-extensions-embedded-kafka` module to your test compile path.
 
 
-[<img src="https://img.shields.io/maven-central/v/io.kotest.extensions/kotest-extensions-embedded-kafka.svg?label=latest%20release"/>](http://search.maven.org/#search|ga|1|kotest-extensions-embedded-kafka)
+[<img src="https://img.shields.io/maven-central/v/io.kotest.extensions/kotest-extensions-embedded-kafka.svg?label=latest%20release"/>](https://search.maven.org/artifact/io.kotest.extensions/kotest-extensions-embedded-kafka)
 [<img src="https://img.shields.io/nexus/s/https/oss.sonatype.org/io.kotest.extensions/kotest-extensions-embedded-kafka.svg?label=latest%20snapshot"/>](https://oss.sonatype.org/content/repositories/snapshots/io/kotest/extensions/kotest-extensions-embedded-kafka/)
 
 
@@ -37,11 +37,11 @@ class EmbeddedKafkaListenerTest : FunSpec() {
 
 And the broker will be started once the spec is created and stopped once the spec completes.
 
-Note: The underlying [embedded kafka library](https://github.com/kotest/kotest-extension-embedded-kafka) uses a global object for state. Do not start multiple kafka instances at the same time.
+Note: The underlying [embedded kafka library](https://github.com/embeddedkafka/embedded-kafka) uses a global object for state. Do not start multiple kafka instances at the same time.
 
 ### Consumer / Producer
 
-To create a consumer and producer we can use methods on the listener
+To create a consumer and producer we can use convenience methods on the listener:
 
 ```kotlin
 class EmbeddedKafkaListenerTest : FunSpec({
@@ -62,6 +62,24 @@ class EmbeddedKafkaListenerTest : FunSpec({
    }
 
 })
+```
+
+The `stringStringProducer` and `stringStringConsumer` methods return a producer / consumer that accept strings for the keys and values. Similar methods exist for byte pairs.
+
+Alternatively, you can access the host/port the Kafka instance was deployed on and create the clients yourself:
+
+```kotlin
+class EmbeddedKafkaListenerTest : FunSpec({
+
+   listener(embeddedKafkaListener)
+   
+   val props = Properties().apply {
+      put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "${embeddedKafkaListener.host}:${embeddedKafkaListener.port}")
+   }
+   
+   val producer = KafkaProducer<String, String>(props)
+   
+}
 ```
 
 
@@ -90,3 +108,11 @@ class EmbeddedKafkaCustomPortTest : FunSpec({
    }
 })
 ```
+
+You can also do specify the zookeeper port using an alternative overload.
+
+```
+val listener = EmbeddedKafkaListener(kafkaPort = 6005, zookeeperPort = 9005)
+```
+
+

@@ -1,8 +1,8 @@
 package io.kotest.runner.junit4
 
 import io.kotest.core.spec.Spec
+import io.kotest.engine.spec.materializeAndOrderRootTests
 import io.kotest.engine.KotestEngineLauncher
-import io.kotest.core.spec.materializeAndOrderRootTests
 import io.kotest.engine.spec.createAndInitializeSpec
 import io.kotest.fp.Try.Failure
 import io.kotest.fp.Try.Success
@@ -15,11 +15,13 @@ class KotestTestRunner(
    private val klass: Class<out Spec>
 ) : Runner() {
 
-   override fun run(notifier: RunNotifier) = runBlocking {
-      val listener = JUnitTestEngineListener(notifier)
-      KotestEngineLauncher()
-         .withListener(listener)
-         .withSpec(klass.kotlin).launch()
+   override fun run(notifier: RunNotifier) {
+      runBlocking {
+         val listener = JUnitTestEngineListener(notifier)
+         KotestEngineLauncher
+            .default(listOf(listener), listOf(klass.kotlin), null)
+            .launch()
+      }
    }
 
    override fun getDescription(): Description = klass.let { klass ->

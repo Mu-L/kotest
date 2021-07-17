@@ -5,7 +5,6 @@ import io.kotest.assertions.show.show
 import io.kotest.matchers.*
 import io.kotest.matchers.neverNullMatcher
 import io.kotest.matchers.string.UUIDVersion.ANY
-import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.text.RegexOption.IGNORE_CASE
 
@@ -112,7 +111,7 @@ infix fun String?.shouldNotContainIgnoringCase(substr: String): String? {
 
 fun containIgnoringCase(substr: String) = neverNullMatcher<String> { value ->
    MatcherResult(
-      value.toLowerCase().indexOf(substr.toLowerCase()) >= 0,
+      value.lowercase().indexOf(substr.lowercase()) >= 0,
       { "${value.show().value} should contain the substring ${substr.show().value} (case insensitive)" },
       { "${value.show().value} should not contain the substring ${substr.show().value} (case insensitive)" }
    )
@@ -184,42 +183,6 @@ fun include(substr: String) = neverNullMatcher<String> { value ->
       "${value.show().value} should not include substring ${substr.show().value}"
    )
 }
-
-infix fun String?.shouldMatch(regex: String): String? {
-   this should match(regex)
-   return this
-}
-
-infix fun String?.shouldMatch(regex: Regex): String? {
-   this should match(regex)
-   return this
-}
-
-infix fun String?.shouldNotMatch(regex: String): String? {
-   this shouldNot match(regex)
-   return this
-}
-
-infix fun String?.shouldEndWith(suffix: String): String? {
-   this should endWith(suffix)
-   return this
-}
-
-infix fun String?.shouldNotEndWith(suffix: String): String? {
-   this shouldNot endWith(suffix)
-   return this
-}
-
-infix fun String?.shouldStartWith(prefix: String): String? {
-   this should startWith(prefix)
-   return this
-}
-
-infix fun String?.shouldNotStartWith(prefix: String): String? {
-   this shouldNot startWith(prefix)
-   return this
-}
-
 
 /**
  * Asserts that [this] is equal to [other] (ignoring case)
@@ -376,7 +339,6 @@ fun beUUID(
    private fun String.isNilUUID() = this == "00000000-0000-0000-0000-000000000000"
 }
 
-@OptIn(ExperimentalContracts::class)
 fun String?.shouldBeInteger(radix: Int = 10): Int {
    contract {
       returns() implies (this@shouldBeInteger != null)

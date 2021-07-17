@@ -30,7 +30,11 @@ kotlin {
 
       macosX64()
       tvos()
-//      watchos()
+
+      watchosArm32()
+      watchosArm64()
+      watchosX86()
+      watchosX64()
 
       iosX64()
       iosArm64()
@@ -41,8 +45,7 @@ kotlin {
 
       val commonMain by getting {
          dependencies {
-            implementation(kotlin("stdlib"))
-            implementation(kotlin("reflect"))
+            compileOnly(kotlin("stdlib"))
          }
       }
 

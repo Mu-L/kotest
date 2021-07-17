@@ -1,6 +1,6 @@
 package io.kotest.engine.listener
 
-import io.kotest.core.test.TestCaseExecutionListener
+import io.kotest.engine.test.TestCaseExecutionListener
 import io.kotest.core.test.Description
 import io.kotest.core.test.TestCase
 import io.kotest.core.test.TestResult
@@ -29,7 +29,7 @@ class BufferedTestCaseExcecutionListener(private val listener: TestCaseExecution
    }
 
    fun rootFinished(testCase: TestCase) {
-      require(testCase.isTopLevel())
+      require(testCase.description.isRootTest())
       synchronized(this) {
          startStop(testCase, finished[testCase.description]!!.second)
       }

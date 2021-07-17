@@ -4,7 +4,6 @@ import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldNot
-import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
 /**
@@ -24,7 +23,6 @@ import kotlin.contracts.contract
  *
  * ```
  */
-@OptIn(ExperimentalContracts::class)
 fun Any?.shouldBeNull() {
   contract {
     returns() implies (this@shouldBeNull == null)
@@ -65,7 +63,6 @@ fun Any?.shouldBeNull() {
  *
  * ```
  */
-@OptIn(ExperimentalContracts::class)
 fun <T> T?.shouldNotBeNull(): T {
    contract {
       returns() implies (this@shouldNotBeNull != null)
@@ -101,6 +98,6 @@ fun beNull() = object : Matcher<Any?> {
   override fun test(value: Any?): MatcherResult {
     val passed = value == null
 
-    return MatcherResult(passed, "Expected value to be null, but was $value.", "Expected value not be null, but was null.")
+    return MatcherResult(passed, "Expected value to be null, but was $value.", "Expected value to not be null, but was null.")
   }
 }

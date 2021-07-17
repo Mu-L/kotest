@@ -2,10 +2,12 @@ package com.sksamuel.kotest.matchers.doubles
 
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.doubles.percent
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.numericDoubles
+import io.kotest.property.arbitrary.numericDouble
 import io.kotest.property.checkAll
 
 class DoubleToleranceTest : FunSpec({
@@ -17,10 +19,15 @@ class DoubleToleranceTest : FunSpec({
    }
 
    test("infinite double with finite tolerance should equal the same infinite double") {
-      checkAll(Arb.numericDoubles(from = 0.0)) { eps ->
+      checkAll(Arb.numericDouble(min = 0.0)) { eps ->
          Double.NEGATIVE_INFINITY shouldBe (Double.NEGATIVE_INFINITY plusOrMinus eps)
          Double.POSITIVE_INFINITY shouldBe (Double.POSITIVE_INFINITY plusOrMinus eps)
       }
+   }
+
+   test("Allow for percentage tolerance") {
+      1.5 shouldBe (1.0 plusOrMinus 50.percent)
+      1.5 shouldNotBe (2.0 plusOrMinus 10.percent)
    }
 })
 

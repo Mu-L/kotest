@@ -54,14 +54,14 @@ fun Arb.Companion.localDate(
    val feb29Year = yearRange.firstOrNull { Year.of(it).isLeap }
    val feb29Date = feb29Year?.let { LocalDate.of(it, 2, 29) }
 
-   val edgecases = listOfNotNull(
+   val edgeCases = listOfNotNull(
       feb28Date,
       feb29Date,
       LocalDate.of(minDate.year, minDate.month, minDate.dayOfMonth),
       LocalDate.of(maxDate.year, maxDate.month, maxDate.dayOfMonth)
    )
 
-   return arbitrary(edgecases) {
+   return arbitrary(edgeCases) {
       val minDateGenerated = LocalDate.of(minDate.year, minDate.month, minDate.dayOfMonth)
       val maxDateGenerated = LocalDate.of(maxDate.year, maxDate.month, maxDate.dayOfMonth)
       val days = ChronoUnit.DAYS.between(minDateGenerated, maxDateGenerated)
@@ -97,15 +97,18 @@ fun Arb.Companion.localDateTime(
    maxYear: Int = 2030
 ): Arb<LocalDateTime> {
 
-   val localDates = localDate(LocalDate.of(minYear, 1, 1), LocalDate.of(maxYear, 12, 31)).edgecases()
-   val times = localTime().edgecases()
-   val edgecases = localDates.flatMap { date -> times.map { date.atTime(it) } }
-
-   return arbitrary(edgecases) {
-      val date = localDate(LocalDate.of(minYear, 1, 1), LocalDate.of(maxYear, 12, 31)).single(it)
-      val time = localTime().single(it)
-      date.atTime(time)
-   }
+   return arbitrary(
+      edgecaseFn = {
+         val date = localDate(LocalDate.of(minYear, 1, 1), LocalDate.of(maxYear, 12, 31)).edgecase(it)
+         val time = localTime().edgecase(it)
+         if (date == null || time == null) null else date.atTime(time)
+      },
+      sampleFn = {
+         val date = localDate(LocalDate.of(minYear, 1, 1), LocalDate.of(maxYear, 12, 31)).single(it)
+         val time = localTime().single(it)
+         date.atTime(time)
+      }
+   )
 }
 
 typealias InstantRange = ClosedRange<Instant>

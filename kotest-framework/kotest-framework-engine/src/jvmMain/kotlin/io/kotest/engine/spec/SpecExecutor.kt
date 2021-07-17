@@ -2,12 +2,11 @@ package io.kotest.engine.spec
 
 import io.kotest.core.config.configuration
 import io.kotest.core.extensions.SpecExtension
-import io.kotest.core.extensions.resolvedSpecExtensions
-import io.kotest.core.internal.isActive
-import io.kotest.core.internal.resolvedThreads
+import io.kotest.engine.extensions.resolvedSpecExtensions
+import io.kotest.engine.test.status.isEnabled
+import io.kotest.engine.concurrency.resolvedThreads
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.Spec
-import io.kotest.core.spec.materializeAndOrderRootTests
 import io.kotest.core.test.TestCase
 import io.kotest.core.test.TestResult
 import io.kotest.engine.NotificationManager
@@ -35,10 +34,10 @@ class SpecExecutor(private val listener: TestEngineListener) {
    private val notifications = NotificationManager(listener)
 
    suspend fun execute(kclass: KClass<out Spec>) {
-      log("SpecExecutor execute [$kclass]")
+      log { "SpecExecutor execute [$kclass]" }
       notifications.specStarted(kclass)
          .flatMap { createInstance(kclass) }
-         .flatMap { runTestsIfAtLeastOneActive(it) }
+         .flatMap { runTestsIfAtLeastOneEnabled(it) }
          .fold(
             { notifications.specFinished(kclass, it, emptyMap()) },
             { notifications.specFinished(kclass, null, it) }
@@ -59,10 +58,16 @@ class SpecExecutor(private val listener: TestEngineListener) {
     * execution step takes place. Otherwise if at least one active, the [runTests]
     * function is invoked.
     */
-   private suspend fun runTestsIfAtLeastOneActive(spec: Spec): Try<Map<TestCase, TestResult>> {
-      log("runTestsIfAtLeastOneActive [$spec]")
+   private suspend fun runTestsIfAtLeastOneEnabled(spec: Spec): Try<Map<TestCase, TestResult>> {
+      log { "runTestsIfAtLeastOneActive [$spec]" }
       val roots = spec.materializeAndOrderRootTests()
-      val active = roots.any { it.testCase.isActive() }
+      val active = roots.any { it.testCase.isEnabled().isEnabled }
+
+      if (!active) {
+         val results = roots.associate { it.testCase to TestResult.ignored(it.testCase.isEnabled()) }
+         notifications.specSkipped(spec, results)
+      }
+
       return if (active) runTests(spec) else emptyMap<TestCase, TestResult>().success()
    }
 
@@ -77,12 +82,12 @@ class SpecExecutor(private val listener: TestEngineListener) {
       // the terminal case after all (if any) extensions have been invoked
       val run: suspend () -> Unit = suspend {
          val runner = runner(spec)
-         log("SpecExecutor: Using runner $runner")
+         log { "SpecExecutor: Using runner $runner" }
          results = runner.execute(spec)
       }
 
       val extensions = spec.resolvedSpecExtensions()
-      log("SpecExecutor: Intercepting spec with ${extensions.size} extensions [$extensions]")
+      log { "SpecExecutor: Intercepting spec with ${extensions.size} extensions [$extensions]" }
       return Try { interceptSpec(spec, extensions, run) }.map { results }.flatten()
    }
 
@@ -104,7 +109,7 @@ class SpecExecutor(private val listener: TestEngineListener) {
    }
 
    private fun Spec.resolvedIsolationMode() =
-      this.isolationMode() ?: this.isolationMode ?: this.isolation ?: configuration.isolationMode
+      this.isolationMode() ?: this.isolationMode ?: configuration.isolationMode
 
    private fun runner(spec: Spec): SpecRunner {
       return when (spec.resolvedIsolationMode()) {

@@ -5,8 +5,7 @@ import io.kotest.core.factory.TestFactoryConfiguration
 import io.kotest.core.factory.build
 import io.kotest.core.spec.DslDrivenSpec
 import io.kotest.core.spec.resolvedDefaultConfig
-import io.kotest.core.spec.style.scopes.FeatureSpecRootScope
-import io.kotest.core.spec.style.scopes.Lifecycle
+import io.kotest.core.spec.style.scopes.FeatureSpecRootContext
 import io.kotest.core.spec.style.scopes.RootTestRegistration
 import io.kotest.core.test.TestCaseConfig
 
@@ -22,19 +21,17 @@ fun featureSpec(block: FeatureSpecTestFactoryConfiguration.() -> Unit): TestFact
    return config.build()
 }
 
-class FeatureSpecTestFactoryConfiguration : TestFactoryConfiguration(), FeatureSpecRootScope {
-   override fun lifecycle(): Lifecycle = Lifecycle.from(this)
+class FeatureSpecTestFactoryConfiguration : TestFactoryConfiguration(), FeatureSpecRootContext {
    override fun defaultConfig(): TestCaseConfig = resolvedDefaultConfig()
    override fun registration(): RootTestRegistration = RootTestRegistration.from(this)
 }
 
-abstract class FeatureSpec(body: FeatureSpec.() -> Unit = {}) : DslDrivenSpec(), FeatureSpecRootScope {
+abstract class FeatureSpec(body: FeatureSpec.() -> Unit = {}) : DslDrivenSpec(), FeatureSpecRootContext {
 
    init {
       body()
    }
 
-   override fun lifecycle(): Lifecycle = Lifecycle.from(this)
    override fun defaultConfig(): TestCaseConfig = this.resolvedDefaultConfig()
    override fun registration(): RootTestRegistration = RootTestRegistration.from(this)
 

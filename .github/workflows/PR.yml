@@ -32,6 +32,10 @@ jobs:
             if: matrix.os == 'macOS-latest'
             run: ./gradlew macosX64Test --scan
 
+         -  name: Run watchOS tests
+            if: matrix.os == 'macOS-latest'
+            run: ./gradlew watchosArm32TestKlibrary watchosArm64TestKlibrary watchosX86Test watchosX64Test --scan
+
          -  name: Bundle the build report
             if: failure()
             run: find . -type d -name 'reports' | zip -@ -r build-reports.zip

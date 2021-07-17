@@ -1,6 +1,6 @@
 package io.kotest.core.script
 
-import io.kotest.core.config.ExperimentalKotest
+import io.kotest.common.ExperimentalKotest
 import io.kotest.core.plan.Descriptor
 import io.kotest.core.plan.DisplayName
 import io.kotest.core.plan.Name
@@ -42,7 +42,7 @@ object ScriptRuntime {
       type: TestType,
       test: suspend (TestContext) -> Unit
    ) {
-      log("ScriptRuntime: registerRootTest $name")
+      log { "ScriptRuntime: registerRootTest $name" }
       val config = if (xdisabled) TestCaseConfig().copy(enabled = false) else TestCaseConfig()
       val description = spec.description().append(name, type)
       rootTests.add(

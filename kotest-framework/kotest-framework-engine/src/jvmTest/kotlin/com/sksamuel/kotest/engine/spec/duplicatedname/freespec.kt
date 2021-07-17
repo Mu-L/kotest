@@ -1,26 +1,33 @@
 package com.sksamuel.kotest.engine.spec.duplicatedname
 
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.DuplicatedTestNameException
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 
 abstract class FreeSpecDuplicateNameTest(iso: IsolationMode) : FreeSpec() {
-
    init {
       isolationMode = iso
 
-      "wibble" { }
-      shouldThrow<DuplicatedTestNameException> {
-         "wibble" { }
-      }.message shouldBe "Cannot create test with duplicated name wibble"
+      "foo" { }
+      "foo" { this.testCase.displayName shouldBe "(1) foo" }
+      "foo" { this.testCase.displayName shouldBe "(2) foo" }
 
-      "wobble" - {
-         "wibble" { }
-         shouldThrow<DuplicatedTestNameException> {
-            "wibble" { }
+      "woo" - {
+         "goo" { }
+         "goo" {
+            this.testCase.displayName shouldBe "(1) goo"
          }
+         "goo" {
+            this.testCase.displayName shouldBe "(2) goo"
+         }
+      }
+
+      "woo" - {
+         this.testCase.displayName shouldBe "(1) woo"
+      }
+
+      "woo" - {
+         this.testCase.displayName shouldBe "(2) woo"
       }
    }
 }

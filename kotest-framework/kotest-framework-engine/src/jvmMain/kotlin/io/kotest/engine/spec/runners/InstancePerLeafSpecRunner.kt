@@ -1,30 +1,30 @@
 package io.kotest.engine.spec.runners
 
-import io.kotest.core.DuplicatedTestNameException
+import io.kotest.core.config.configuration
+import io.kotest.engine.test.TestCaseExecutor
 import io.kotest.core.spec.Spec
+import io.kotest.engine.spec.materializeAndOrderRootTests
 import io.kotest.core.test.Description
-import io.kotest.core.test.DescriptionName
 import io.kotest.core.test.NestedTest
 import io.kotest.core.test.TestCase
+import io.kotest.engine.test.TestCaseExecutionListener
 import io.kotest.core.test.TestContext
 import io.kotest.core.test.TestResult
+import io.kotest.core.test.createTestName
 import io.kotest.core.test.toTestCase
-import io.kotest.engine.spec.SpecRunner
-import io.kotest.engine.listener.TestEngineListener
 import io.kotest.engine.ExecutorExecutionContext
-import io.kotest.core.internal.TestCaseExecutor
-import io.kotest.core.spec.invokeAfterSpec
-import io.kotest.core.spec.invokeBeforeSpec
-import io.kotest.core.spec.materializeAndOrderRootTests
-import io.kotest.core.test.TestCaseExecutionListener
 import io.kotest.engine.launchers.TestLauncher
-import io.kotest.engine.toTestResult
+import io.kotest.engine.listener.TestEngineListener
+import io.kotest.engine.spec.SpecRunner
+import io.kotest.engine.test.DuplicateTestNameHandler
+import io.kotest.engine.lifecycle.invokeAfterSpec
+import io.kotest.engine.lifecycle.invokeBeforeSpec
+import io.kotest.engine.test.toTestResult
 import io.kotest.fp.Try
 import io.kotest.mpp.log
 import kotlinx.coroutines.coroutineScope
 import java.util.PriorityQueue
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.Comparator
 import kotlin.coroutines.CoroutineContext
 
 internal class InstancePerLeafSpecRunner(
@@ -88,10 +88,10 @@ internal class InstancePerLeafSpecRunner(
 
    // we need to find the same root test but in the newly created spec
    private suspend fun interceptAndRun(spec: Spec, test: TestCase): Try<Spec> = Try {
-      log("InstancePerLeafSpecRunner: Created new spec instance $spec")
+      log { "InstancePerLeafSpecRunner: Created new spec instance $spec" }
       val root = spec.materializeAndOrderRootTests().firstOrNull { it.testCase.description.isOnPath(test.description) }
          ?: throw error("Unable to locate root test ${test.description.testPath()}")
-      log("InstancePerLeafSpecRunner: Starting root test ${root.testCase.description} in search of ${test.description}")
+      log { "InstancePerLeafSpecRunner: Starting root test ${root.testCase.description} in search of ${test.description}" }
       run(root.testCase, test)
       spec
    }
@@ -102,17 +102,14 @@ internal class InstancePerLeafSpecRunner(
 
             var open = true
 
-            // check for duplicate names in the same scope
-            val namesInScope = mutableSetOf<DescriptionName.TestName>()
+            private val handler = DuplicateTestNameHandler(configuration.duplicateTestNameMode)
 
             override val testCase: TestCase = test
             override val coroutineContext: CoroutineContext = this@coroutineScope.coroutineContext
             override suspend fun registerTestCase(nested: NestedTest) {
 
-               if (!namesInScope.add(nested.name))
-                  throw DuplicatedTestNameException(nested.name)
-
-               val t = nested.toTestCase(test.spec, test)
+               val overrideName = handler.handle(nested.name)?.let { createTestName(it) }
+               val t = nested.toTestCase(test.spec, test, overrideName)
 
                // if this test is our target then we definitely run it
                // or if the test is on the path to our target we must run it

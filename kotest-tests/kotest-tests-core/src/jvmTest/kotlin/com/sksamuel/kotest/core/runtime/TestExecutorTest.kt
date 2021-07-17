@@ -1,12 +1,11 @@
 package com.sksamuel.kotest.core.runtime
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.CallingThreadExecutionContext
-import io.kotest.core.TimeoutExecutionContext
+import io.kotest.engine.test.CallingThreadExecutionContext
+import io.kotest.engine.test.TimeoutExecutionContext
 import io.kotest.engine.ExecutorExecutionContext
-import io.kotest.core.test.TestCaseExecutionListener
-import io.kotest.core.internal.TestCaseExecutor
-import io.kotest.core.internal.TimeoutException
+import io.kotest.engine.test.TestCaseExecutionListener
+import io.kotest.engine.test.TestCaseExecutor
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.core.spec.style.funSpec
 import io.kotest.core.test.NestedTest
@@ -14,16 +13,19 @@ import io.kotest.core.test.TestCase
 import io.kotest.core.test.TestContext
 import io.kotest.core.test.TestResult
 import io.kotest.core.test.TestStatus
-import io.kotest.core.spec.materializeAndOrderRootTests
-import io.kotest.engine.toTestResult
+import io.kotest.engine.TestTimeoutException
+import io.kotest.engine.spec.materializeAndOrderRootTests
+import io.kotest.engine.test.toTestResult
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlin.coroutines.CoroutineContext
-import kotlin.time.milliseconds
+import kotlin.time.Duration
 
+@DelicateCoroutinesApi
 fun testExecutorTests(context: TimeoutExecutionContext) = funSpec {
 
    fun context(testCase: TestCase) = object : TestContext {
@@ -71,7 +73,7 @@ fun testExecutorTests(context: TimeoutExecutionContext) = funSpec {
       val testCase = Tests().materializeAndOrderRootTests().first { it.testCase.displayName == "b" }.testCase
       val result = executor.execute(testCase, context(testCase))
       result.status shouldBe TestStatus.Error
-      result.error shouldBe TimeoutException(100)
+      result.error shouldBe TestTimeoutException(100, "b")
       started shouldBe true
       finished shouldBe true
    }
@@ -157,6 +159,7 @@ fun testExecutorTests(context: TimeoutExecutionContext) = funSpec {
    }
 }
 
+@DelicateCoroutinesApi
 class TestExecutorTest : FunSpec({
    include("calling thread:", testExecutorTests(CallingThreadExecutionContext))
    include("executor:", testExecutorTests(ExecutorExecutionContext))
@@ -164,7 +167,7 @@ class TestExecutorTest : FunSpec({
 
 private class Tests : FunSpec({
    test("a") {}
-   test("b").config(timeout = 100.milliseconds) { delay(1000000) }
+   test("b").config(timeout = Duration.milliseconds(100)) { delay(1000000) }
 })
 
 

@@ -29,7 +29,7 @@ class DataTestingWithEnumValueInDataClassTest : FunSpec({
          "PythagTriple(a=Three, b=Four, c=Five)",
          "PythagTriple(a=Four, b=Three, c=Five)",
          "Pythag triples tests",
-         "com.sksamuel.kotest.engine.datatest.FooClass",
+         "FooClass(a=Bar1, b=Bar2)",
          "Data class having enum where enum has non data class value"
       )
    }
@@ -55,7 +55,3 @@ enum class Bar(val baz: Baz) {
    Bar1(Baz("Baz1")),
    Bar2(Baz("Baz2"))
 }
-
-fun isPythagTriple(a: PythagNumber, b: PythagNumber, c: PythagNumber): Boolean =
-   a.num * a.num + b.num * b.num == c.num * c.num
-

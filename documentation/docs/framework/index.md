@@ -6,7 +6,7 @@ slug: framework.html
 
 ![intro_gif](../images/intro_gif.gif)
 
-[![version badge](https://img.shields.io/maven-central/v/io.kotest/kotest-framework-engine.svg?label=release)](https://search.maven.org/search?q=kotest)
+[![version badge](https://img.shields.io/maven-central/v/io.kotest/kotest-framework-engine.svg?label=release)](https://search.maven.org/search?q=g:io.kotest%20OR%20g:io.kotest.extensions)
 [![version badge](https://img.shields.io/nexus/s/https/oss.sonatype.org/io.kotest/kotest-framework-engine.svg?label=snapshot)](https://oss.sonatype.org/content/repositories/snapshots/io/kotest/)
 
 Test with Style
@@ -30,7 +30,7 @@ Kotest allows tests to be created in several styles, so you can choose the style
 Check all the Tricky Cases With Data Driven Testing
 --------------------------
 
-Handle even an enormous amount of input parameter combinations easily with [data driven tests](data_driven_testing.md):
+Handle even an enormous amount of input parameter combinations easily with [data driven tests](datatesting/data_driven_testing.md):
 
 ```kotlin
 class StringSpecExample : StringSpec({

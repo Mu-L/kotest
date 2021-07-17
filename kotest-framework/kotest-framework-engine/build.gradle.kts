@@ -25,14 +25,15 @@ kotlin {
          browser()
          nodejs()
       }
+      linuxX64()
    }
 
    sourceSets {
 
       val commonMain by getting {
          dependencies {
+            compileOnly(kotlin("stdlib"))
             implementation(kotlin("reflect"))
-            implementation(kotlin("stdlib"))
             api(project(Projects.AssertionsShared))
             implementation(project(Projects.Common))
             // this is API because we want people to be able to use the functionality in their tests
@@ -78,6 +79,14 @@ kotlin {
          }
       }
 
+      val desktopMain by creating {
+         dependsOn(commonMain)
+      }
+
+      val linuxX64Main by getting {
+         dependsOn(desktopMain)
+      }
+
       all {
          languageSettings.useExperimentalAnnotation("kotlin.time.ExperimentalTime")
          languageSettings.useExperimentalAnnotation("kotlin.experimental.ExperimentalTypeInference")
@@ -87,7 +96,7 @@ kotlin {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
    kotlinOptions.jvmTarget = "1.8"
-   kotlinOptions.apiVersion = "1.4"
+   kotlinOptions.apiVersion = "1.5"
 }
 
 tasks.named<Test>("jvmTest") {

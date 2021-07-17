@@ -1,31 +1,22 @@
 package com.sksamuel.kotest.property.arbitrary
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.string.shouldMatch
 import io.kotest.property.Arb
-import io.kotest.property.RandomSource
 import io.kotest.property.arbitrary.stringPattern
 import io.kotest.property.arbitrary.take
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.newSingleThreadContext
 import java.util.concurrent.Executors
 
 class StringPatternTest : FunSpec({
-   test("should be cached") {
+
+   test("generated patterns should match the regex") {
       val arbPattern = Arb.stringPattern("[a-zA-Z0-9]+")
-
-      val testDispatcher = Executors.newFixedThreadPool(3).asCoroutineDispatcher()
-      val (first, second, third) = awaitAll(
-         async(testDispatcher) { arbPattern.take(1000, RandomSource.seeded(1234L)).toList().takeLast(10) },
-         async(testDispatcher) { arbPattern.take(1000, RandomSource.seeded(2345L)).toList().takeLast(10) },
-         async(testDispatcher) { arbPattern.take(1000, RandomSource.seeded(1324L)).toList().takeLast(10) }
-      )
-
-      first shouldContainInOrder listOf("T8", "7Jx0zg5", "o", "Mu", "e5", "b0", "g", "uF3", "h", "l7hlj")
-      second shouldContainInOrder listOf("6I", "i4", "j4", "w", "TiOO", "E", "Hz", "raE", "2974dU", "2")
-      third shouldContainInOrder listOf("K", "rs3V7", "8", "P7", "9058", "F", "LuU", "tB9", "5", "0m")
+      arbPattern.take(1000).forEach {
+         it.shouldMatch("[a-zA-Z0-9]+".toRegex())
+      }
    }
 
    context("should not timeout") {

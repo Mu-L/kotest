@@ -4,7 +4,6 @@ pluginManagement {
    repositories {
       mavenCentral()
       gradlePluginPortal()
-      maven("https://dl.bintray.com/kotlin/kotlin-eap")
       jcenter()
    }
 }
@@ -17,13 +16,24 @@ include("kotest-common")
 // defines data classes and the spec styles; all classes needed to define specs/testcases live here
 include("kotest-framework:kotest-framework-api")
 
+// async / parallel / concurrency / non-determistic test helpers
+include("kotest-framework:kotest-framework-concurrency")
+
 // used to discovery specs from the classpath at runtime
 // brings in the API dependency for required data types
 include("kotest-framework:kotest-framework-discovery")
 
-// contains the JVM execution engine implementation
+// contains the execution engine implementation for jvm, js, native
 // brings in the API dependency
 include("kotest-framework:kotest-framework-engine")
+
+// compiler plugins to integrate tests with the engine
+include("kotest-framework:kotest-framework-compiler-plugin-js")
+include("kotest-framework:kotest-framework-compiler-plugin-native")
+include("kotest-framework:kotest-framework-compiler-plugin-gradle")
+
+// contains data driven testing that builds on top of the kotest test framework
+include("kotest-framework:kotest-framework-datatest")
 
 // contains the matcher interface and is intended as a lightweight dependency for library authors
 // to depend on when writing matcher libraries
@@ -44,9 +54,6 @@ include("kotest-assertions:kotest-assertions-sql")
 // base classes for property testing, plus std lib generators
 include("kotest-property")
 
-// property test generators for arrow-kt
-include("kotest-property:kotest-property-arrow")
-
 // property test generators for kotlinx.datetime
 include("kotest-property:kotest-property-datetime")
 
@@ -56,25 +63,16 @@ include("kotest-runner:kotest-runner-junit5")
 
 include("kotest-runner:kotest-runner-junit4")
 include("kotest-extensions")
-include("kotest-extensions:kotest-extensions-allure")
 include("kotest-extensions:kotest-extensions-http")
 include("kotest-extensions:kotest-extensions-junitxml")
 include("kotest-extensions:kotest-extensions-htmlreporter")
-include("kotest-extensions:kotest-extensions-koin")
-include("kotest-extensions:kotest-extensions-mockserver")
-include("kotest-extensions:kotest-extensions-spring")
-include("kotest-extensions:kotest-extensions-testcontainers")
 
 // extensions that adapt junit extensions into kotest extensions
 include("kotest-extensions:kotest-extensions-junit5")
 
-
-include("kotest-plugins:kotest-plugins-pitest")
-
 // the tests modules each test a piece of functionality
 // it is useful to have separate modules so each can set their own project config that
 // may be required as part of the tests
-include("kotest-tests:kotest-tests-allure")
 include("kotest-tests:kotest-tests-autoscan")
 include("kotest-tests:kotest-tests-core")
 
@@ -100,7 +98,9 @@ include("kotest-tests:kotest-tests-native")
 include("kotest-bom")
 
 plugins {
-   id("com.gradle.enterprise") version "3.5.1"
+   id("com.gradle.enterprise") version "3.6.1"
+   // See https://jmfayard.github.io/refreshVersions
+   id("de.fayard.refreshVersions") version "0.10.1"
 }
 
 gradleEnterprise {

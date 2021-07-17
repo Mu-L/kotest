@@ -2,15 +2,18 @@ package io.kotest.property
 
 import io.kotest.mpp.sysprop
 import kotlin.math.max
+import kotlin.native.concurrent.ThreadLocal
 
 /**
  * Global object for containing settings for property testing.
  */
+@ThreadLocal
 object PropertyTesting {
+   var maxFilterAttempts: Int = 10
    var shouldPrintGeneratedValues: Boolean = sysprop("kotest.proptest.output.generated-values", "false") == "true"
    var shouldPrintShrinkSteps: Boolean = sysprop("kotest.proptest.output.shrink-steps", "true") == "true"
    var defaultIterationCount: Int = sysprop("kotest.proptest.default.iteration.count", "1000").toInt()
-   var edgecasesGenerationProbability: Double = sysprop("kotest.proptest.arb.edgecases-generation-probability", "0.1").toDouble()
+   var edgecasesGenerationProbability: Double = sysprop("kotest.proptest.arb.edgecases-generation-probability", "0.02").toDouble()
    var edgecasesBindDeterminism: Double = sysprop("kotest.proptest.arb.edgecases-bind-determinism", "0.9").toDouble()
 }
 
@@ -41,7 +44,6 @@ fun calculateMinimumIterations(vararg gens: Gen<*>): Int {
 }
 
 fun EdgeConfig.Companion.default(): EdgeConfig = EdgeConfig(
-   determinism = PropertyTesting.edgecasesBindDeterminism,
    edgecasesGenerationProbability = PropertyTesting.edgecasesGenerationProbability
 )
 

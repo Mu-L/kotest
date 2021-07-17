@@ -4,67 +4,192 @@ sidebar_label: Changelog
 slug: changelog.html
 ---
 
+### [Unreleased 5.0.0]
 
-### [Unreleased]
-
-Note: This changelog mentions the changes which are not yet released in stable version.
-      You can still use a snapshot release to try out these changes and provide us with your valuable feedback.
-      Docs updates are available at kotest.io.
+_**Kotlin 1.5 is now the minimum supported version**_
 
 #### Breaking Changes
+
+* Javascript support has been reworked to support the IR compiler. The legacy compiler is no longer supported.
+* Native test support.
+* `Arb.values` has been removed. This was deprecated back in 4.3 in favour of `Arb.sample`. Any custom arbs that override this method should be updated. Any custom arbs that use the `arbitrary` builders are not affected. (#2277)
+* The Engine no longer logs config to the console during start **by default**. To enable, set the system property `kotest.framework.dump.config` to true. (#2276)
+* Removed deprecated `shouldReceiveWithin` and `shouldReceiveNoElementsWithin` channel matchers.
+
+#### Fixes
+
+* 
+* String matchers now also work on CharSequence where applicable #2278
+* Fix Arb.long/ulong producing values outside range (#2330)
+
+#### Improvements
+
+* Failfast option added [see docs] #2243
+* Unfinished tests should error (#2281)
+* Added option to fail test run if no tests were executed (#2287)
+* Added @RequiresTag for improved spec exclude capability #1820
+* Change usages of Char.toInt() to Char.code for Kotlin 1.5. Migrate codepoints to Codepoint companion object. (#2283)
+* Generex has been replaced with Rgxgen #2323
+* Add fun interace to EnabledCondition #2343
+* In Project Config, `beforeAll` / `afterAll` are now deprecated and `beforeProject` / `afterProject`, which are suspend functions, have been added #2333
+* Improve Arb function naming (#2310)
+* Return the resulting value of the function block from shouldCompleteWithin (#2309)
+* tempdir: Delete temporary directories recursively (#2227)
+* Improve Arb.primitive consistency (#2299)
+* Add Arb.ints zero inclusive variants (#2294)
+* Add unsigned types for Arb (#2290)
+
+#### Deprecations
+
+* `beforeTest` / `afterTest` have been deprecated in favour of `beforeAny` / `afterAny`.
+* Datatest2 has been deprecated
+
+
+## 4.6.1 July 2021
+
+### Fixes
+
+* HTMLReporter - css not loading (href of the file is absolute, not relative) #2342
+* Annotations such as @Ignore and @Isolate now work when composed #2279
+* Finalize spec is now properly called in all situations #2272
+* Arb.bigDecimal bounds are not being honored #2357
+* Fix for running individual test using WordSpec inside intellij #2319
+
+### 4.6.0 May 2021
+
+This is a small release which **adds support for Kotlin 1.5** while remaining compatible with Kotlin 1.4.x
+
+#### Bugfixes.
+
+* All internal logging now uses lazy functions which offers a significant speed up on large test suites.
+  Thanks to [Łukasz Wasylkowski](https://github.com/lwasyl) who spent considerable time tracking down this performance issue.
+* Fixed false negative results by Inspectors when used inside assertSoftly. #2245
+
+#### Features / Improvement
+
+* Test config can now be specified at the test container level in addition to the leaf level #1370 #2050 #2065
+* In data driven tests, added `IsStableType` annotation which when use on a type, kotest will call `toString` method on
+  that type for creating test name. See [updated docs](https://kotest.io/docs/framework/data-driven-testing.html) #2248
+* In data driven tests, added `WithDataTestName` interface which allow a type to modify the test name generated.
+  See [updated docs](https://kotest.io/docs/framework/data-driven-testing.html) #2248
+* Reflection methods are cached to avoid slow reflection calls.
+* Added experimental versions of `eventually`, `until`, and `continually` that don't use `kotlin.time` internally.
+  See [updated docs](https://kotest.io/docs/framework/concurrency/eventually.html) #2149
+* Coroutines upgraded to 1.5 which also allows us to release assertions/property tests for watchosX64
+* WatchosX64 artifacts released for assertions and property tests.
+
+#### Contributors
+
+* Ashish Kumar Joy
+* Jim Schneidereit
+* Łukasz Wasylkowski
+* sksamuel
+
+
+### 4.5.0 May 2021
+
+As part of this release, third party extensions were promoted to top level repositories instead of modules inside the main kotest repo.
+This allows the extensions to iterate quickly, without needing to wait for a full Kotest release.
+
+From 4.5 onwards, the namespace for all extensions has changed to `io.kotest.extensions` and the versioning reset to 1.0.0.
+
+So, for example, if you used the Spring extension, you would previously have added `io.kotest:kotest-extensions-spring:4.x.y` to your build.
+Now you would use `io.kotest.extensions:kotest-extensions-spring:1.x.y`
+
+See the full list of [extension modules](https://kotest.io/docs/extensions/extensions.html).
+
+
+#### Breaking Changes
+* In order to use `ExperimentalKotest` more broadly,
+  it was moved from `io.kotest.core.config.ExperimentalKotest` to `io.kotest.common.ExperimentalKotest`. #1950
 * In order to ensure the `EventuallyListener` is called in `eventually` when an exception is thrown the `ListenerState` field `result` was changed
   from type `T` to type `T?`. This will allow insight into when the eventually producer function is failing for whatever reason
   instead of appearing as if it is hanging. #2190
-
+* Property tests now randomly cycle between edge cases and samples, rather than iterating all edge cases first. This allows greater number of edge cases to be used and avoids a combinatoral explosion. If you are implementing custom Arb's by extending the Arb class (instead of using the `arbitrary` builders), then you will need to adjust your edge cases method from `fun edgecases(): List<A>` to `fun edgecase(rs: RandomSource): A?`.
+* Because of the above property test change, if you are setting a seed in a property test you may need to adjust the value.
+* The kotlin stdlib dependencies are now marked as `compileOnly`, meaning the version in your build will be used. Kotest tries to maintain compatibility across multiple versions by not relying on features only available in the latest releases.
+* Duplicated test names no longer throw an automatic error, but now mangle the name. So two tests of name 'foo' will appear as 'foo' and '(1) foo'. This enables data driven testing to work properly in javascript. To restore the original behavior, set the configuration value `Configuration.duplicateTestNameMode = Error`.
 
 #### Features / Improvement
+* A new data testing module has been added `kotest-framework-datatest` which properly supports runtime nesting of data tests. See [updated docs](https://kotest.io/docs/framework/data-driven-testing.html) #2078
 * Added new matcher for DayOfWeek in `kotest-assertion-clock` module. #2124
 * Added factory method to simplify creating new matchers. #2122
 * Added method in `Exhaustive` to create a new `Exhaustive` which will be a cartesian product of given two `Exhaustive`. #2120
-* Added support for writing test inside a object instead of creating a class. #2097
+* Added support for writing tests inside an object as well as class. #1970
 * Added suspend version of `shouldCompleteWithin`, `shouldCompleteBetween` and `shouldTimeOut`. #2107
-* Added `kotest-extensions-wiremock` module for managing lifecycle of `WireMockServer` in Kotest test. #2108
+* Added [kotest-extensions-wiremock](https://github.com/kotest/kotest-extensions-wiremock) project for managing lifecycle of `WireMockServer` in Kotest test. #2108
+* Added [kotest-extensions-kafka](https://github.com/kotest/kotest-extensions-embedded-kafka) project for using embedded kafka in your tests
 * Upgrade `klock` dependency to 2.0.6 and added `browser`, `nodejs`, `linuxX64`, `mingwX64`, `macosX64`, `tvos`,
   `iosX64`, `iosArm64` and `iosArm32` platform targets for `kotest-assertions-klock`. #2116
 * Run eventually one final time if iterations is one and delay is greater than the interval #2105
-* Updates `withEnvironment` function to ignore environment variable key case sensitivity on Windows platform. #2099
-* Some improvement around `eventually`.
-  (1) Makes `EventuallyPredicate` a type alias instead of interface for better user experience.
-  (2) Update failure message to inform the user about failure of given `EventuallyPredicate`.
-  (3) Adds an overload of `eventually` which does not accept `EventuallyPredicate` so that it gives a feel of `until` function. 2046
+* Some improvement around `eventually`.<br/>
+  (1) Makes `EventuallyPredicate` a type alias instead of interface for better user experience.<br/>
+  (2) Update failure message to inform the user about failure of given `EventuallyPredicate`.<br/>
+  (3) Adds an overload of `eventually` which does not accept `EventuallyPredicate` so that it gives a feel of `until` function.
 * Added `shouldBeEqualToComparingFields` and `shouldBeEqualToComparingFieldsExcept` matchers which check equality of
   actual and expected by comparing their fields instead of using `equals` method. #2197
+* `one` and `any` have been added as alternatives to `assertSoftly`. These are suspending methods that will check that only a single
+  assertion succeeded (in the case of `one`) or that at least one assertion succeeded (in the case of `any`). #1950
+* New reporter added to generate HTML reports #2011
+* `Exhaustive.cartesian` has been added #2119
+* `kotest.tags` can now be set via ENV Vars #2098
+* Edgecases are now probabilistic based #2112
+* TestResult should support a reason why tests were skipped #2172
+* Add watchos support back for x86 #2204
+* Add overload to `Double.plusOrMinus` that accepts a percentage value instead of an absolute one. `1.0.plusOrMinus(10.percent)`
+
 
 #### Bugfixes.
-* Corrects a message for `haveCauseOfType` matcher to include the name expected and actual cause type. #2131
-* Fix `IncorrectDereferenceException` when calling assertions on a background thread in a native platform. #2128
-* Corrects error message for shouldContainKeys matcher to includes keys which are not present in given map. #2106
-* Updates Throwable eq to check throwable cause as well while checking throwable equality. #2094
 * Fixes eventually failing inside assert softly block without retrying the given lambda. #2092
 * Fixes any other implementation of `Listener` apart from `ProjectListener` not getting picked by Kotest framework. #2088
 * Fixes `EventuallyListener` not being called in `eventually` when the producer function throws an exception. #2190
+* Use the classname as the default prefix for temporary files #2140
+* Fix for `SystemExitListener` and _picocli_ framework #2156
+* Fix for `Arb.choose(arb, arb2, ...)` not generating random values #2176
+* Using checkAll, forAll and using take on an Arb cause an InvalidMutabilityException on XorWowRandom for Ios #2198
+* Fix issues of passing vararg to another function in containsInOrder #2200
+* The StringShrinker ignored min size limit #2213
+* Fix for unlimited concurrency in spec execution when using experimental concurrency support #2177
+* Synchronize access to Spring test contexts #2166
+* Fixed typo in `haveClassAnnontations` matcher. Existing incorrect spelling is deprecated. #2133
+
 
 
 #### Deprecations
 * Deprecated `instanceOf`, `beInstanceOf`, `beTheSameInstanceAs`, `beOfType` of package `io.kotest.matchers` these will
-  be removed permanently in 4.6 release, you can import these same assertion from `io.kotest.matchers.types`
+  be removed permanently in 4.7 release, you can import these same assertion from `io.kotest.matchers.types`
   package.
-
-* Remove deprecation eventually that uses durations for intervals. #2086
-
-
-#### Docs Updates
-* Corrects generators docs to have correct name of Exhaustive. #2110
-* Update docs to highlight eventually does work properly with assert softly. #2091
-* Adds note about StringSpec does not support nesting tests. #2090
-* Adds docs for `Arb.stringPattern`. #2125
+* Remove deprecated eventually that uses durations for intervals. #2086
+* Receivers used in test scopes have been renamed. For example, `DescribeScope` has become `DescribeSpecContainerContext`.
+  The previous names exist as typealiases but are deprecated.
+  This is only of importance if you implement custom spec types that inherit from the builtin specs or have defined
+  extension methods on those scopes.
 
 
 #### Contributors
-AJ Alt (ajalt), Ashish Kumar Joy (ashishkujoy), Dale King (dalewking), Janek (xerus2000),
-Jim Schneidereit (jschneidereit), Nikita Klimenko (DisPony), Rustam Musin (jvmusin),
-Sam Sam (sksamuel), Sean Flanigan (seanf), Sebastian Schuberth (sschuberth).
 
+* AJ Alt
+* Alex Ordóñez
+* Andreas Deininger
+* Ashish Kumar Joy
+* Dale King
+* Hirotaka Kawata
+* Hugo Martins
+* Janek
+* Jim Schneidereit
+* Leonardo Colman
+* Malte Esch
+* Mateusz Kwieciński
+* Mitchell Yuwono
+* Nikita Klimenko
+* Niklas Lochschmidt
+* Rustam Musin
+* Sean Flanigan
+* Sebastian Schuberth
+* Yoonho Sean Lee
+* Zak Henry
+* sksamuel
+* tbcs
 
 
 ### 4.4.3 March 2021
@@ -152,7 +277,7 @@ Note: Release 4.4.0 bumps the minimum required version of Kotlin to 1.4.21
 #### Bugfix
 
 * A Kotlin 1.4 specific method was added in 4.3.1 and reverted in 4.3.2
-* Arb.choose does not currently include edgecases from input arbs #1886
+* Arb.choose does not currently include edge cases from input arbs #1886
 * String shrinking is not being executed #1860
 * Arb.stringPattern slows down the test dramatically #1878
 * AssertionMode.Error doesn't work on FeatureSpec #1864
@@ -357,8 +482,8 @@ Note: Release 4.4.0 bumps the minimum required version of Kotlin to 1.4.21
 ### 4.0.5 April 2020
 
 * Bugfix: Focus mode would cause some nested tests to be ignored [#1376](https://github.com/kotest/kotest/issues/1376)
-* Bugfix: Arb.choice would include edgecases in the generated values [#1406](https://github.com/kotest/kotest/issues/1406)
-* Bugfix: Arb.int and Arb.long edgecases included values outside the specified ranged [#1405](https://github.com/kotest/kotest/issues/1405)
+* Bugfix: Arb.choice would include edge cases in the generated values [#1406](https://github.com/kotest/kotest/issues/1406)
+* Bugfix: Arb.int and Arb.long edge cases included values outside the specified ranged [#1405](https://github.com/kotest/kotest/issues/1405)
 
 ### 4.0.4 April 2020
 
@@ -402,7 +527,7 @@ Major changes:
 
 * The KotlinTest project is now multi-platform. This means most of the modules now require -jvm to be added if you are working server side JVM only. For example, `io.kotlintest:kotlintest-runner-junit5` is now `io.kotest:kotest-runner-junit5-jvm` taking into account package name changes and the platform suffix.
 * The main assertions library is now `kotest-assertions-core` and many new assertions (matchers) have been added. This changelog won't list them all. It is simpler to view the [full list](assertions/matchers.md).
-* The property test library has moved to a new module `kotest-property` and been reworked to include many new features. See new documentation [here](proptest/index.md). The old property test classes are deprecated and will be removed in a future release.
+* The property test library has moved to a new module `kotest-property` and been reworked to include many new features. The old property test classes are deprecated and will be removed in a future release.
 * Many new property test generators have been added. The full list is [here](proptest/gens.md).
 * Composable specs have been added in the form of _Test Factories_.
 * Project config no longer requires placing in a special package name, but can be placed anywhere in the [classpath](framework/project_config.md).
@@ -852,7 +977,7 @@ uri should haveFragment("results")
 
 * **Arrow matcher module**
 
-A new module has been added which includes matchers for [Arrow](http://arrow-kt.io) - the popular and awesome
+A new module has been added which includes matchers for [Arrow](https://arrow-kt.io/) - the popular and awesome
  functional programming library for Kotlin. To include this module add `kotlintest-assertions-arrow` to your build.
 
 The included matchers are:

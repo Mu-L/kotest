@@ -1,7 +1,7 @@
 plugins {
    id("java")
    kotlin("multiplatform")
-   kotlin("plugin.serialization") version Libs.kotlinVersion
+   kotlin("plugin.serialization")
    id("java-library")
    id("com.adarshr.test-logger")
 }
@@ -32,7 +32,6 @@ kotlin {
          dependencies {
             implementation(Libs.Serialization.json)
             implementation(project(Projects.AssertionsShared))
-            implementation(kotlin("reflect"))
             implementation(Libs.Jayway.jsonpath)
          }
       }
@@ -62,6 +61,7 @@ kotlin {
       all {
          languageSettings.useExperimentalAnnotation("kotlin.time.ExperimentalTime")
          languageSettings.useExperimentalAnnotation("kotlin.experimental.ExperimentalTypeInference")
+         languageSettings.useExperimentalAnnotation("kotlin.contracts.ExperimentalContracts")
       }
    }
 }

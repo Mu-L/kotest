@@ -29,7 +29,7 @@ kotlin {
 
       val commonMain by getting {
          dependencies {
-            implementation(kotlin("stdlib"))
+            compileOnly(kotlin("stdlib"))
             implementation(kotlin("reflect"))
          }
       }
@@ -43,6 +43,7 @@ kotlin {
             api(project(Projects.Discovery))
             api(project(Projects.AssertionsCore))
             api(project(Projects.Extensions))
+            api(project(Projects.FrameworkConcurrency))
             api(Libs.Coroutines.coreJvm)
             api(Libs.JUnitPlatform.engine)
             api(Libs.JUnitPlatform.api)
@@ -70,7 +71,7 @@ kotlin {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
    kotlinOptions.jvmTarget = "1.8"
-   kotlinOptions.apiVersion = "1.4"
+   kotlinOptions.apiVersion = "1.5"
 }
 
 tasks.named<Test>("jvmTest") {

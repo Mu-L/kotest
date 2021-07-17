@@ -1,21 +1,22 @@
 package io.kotest.engine.script
 
-import io.kotest.core.DuplicatedTestNameException
-import io.kotest.core.internal.TestCaseExecutor
+import io.kotest.core.config.configuration
+import io.kotest.engine.test.TestCaseExecutor
 import io.kotest.core.plan.Descriptor
 import io.kotest.core.plan.toDescriptor
 import io.kotest.core.script.ScriptRuntime
-import io.kotest.core.test.DescriptionName
 import io.kotest.core.test.NestedTest
 import io.kotest.core.test.TestCase
-import io.kotest.core.test.TestCaseExecutionListener
+import io.kotest.engine.test.TestCaseExecutionListener
 import io.kotest.core.test.TestContext
 import io.kotest.core.test.TestResult
+import io.kotest.core.test.createTestName
 import io.kotest.core.test.toTestCase
 import io.kotest.engine.ExecutorExecutionContext
 import io.kotest.engine.NotificationManager
 import io.kotest.engine.listener.TestEngineListener
-import io.kotest.engine.toTestResult
+import io.kotest.engine.test.DuplicateTestNameHandler
+import io.kotest.engine.test.toTestResult
 import io.kotest.fp.Try
 import io.kotest.mpp.log
 import java.util.concurrent.ConcurrentHashMap
@@ -38,7 +39,7 @@ class ScriptExecutor(private val listener: TestEngineListener) {
     * Executes the given test [ScriptTemplateWithArgs].
     */
    suspend fun execute(kclass: KClass<out ScriptTemplateWithArgs>): Try<Unit> {
-      log("ScriptExecutor: execute [$kclass]")
+      log { "ScriptExecutor: execute [$kclass]" }
       ScriptRuntime.reset()
       val descriptor = Descriptor.fromScriptClass(kclass)
       return createInstance(kclass)
@@ -74,7 +75,7 @@ class ScriptExecutor(private val listener: TestEngineListener) {
     * Executes the tests registered with the script execution runtime.
     */
    private suspend fun runTests(descriptor: Descriptor.SpecDescriptor): Try<Unit> = Try {
-      log("ScriptExecutor: Executing tests from script")
+      log { "ScriptExecutor: Executing tests from script" }
       ScriptRuntime.materializeRootTests(descriptor).forEach { testCase ->
          runTest(testCase, coroutineContext)
       }
@@ -85,7 +86,7 @@ class ScriptExecutor(private val listener: TestEngineListener) {
     * and notifies the [TestEngineListener] of the instantiation event.
     */
    private fun createInstance(kclass: KClass<out ScriptTemplateWithArgs>): Try<ScriptTemplateWithArgs> {
-      log("ScriptExecutor: Creating instance of $kclass")
+      log { "ScriptExecutor: Creating instance of $kclass" }
       return createAndInitializeScript(kclass, this.javaClass.classLoader)
    }
 
@@ -116,16 +117,13 @@ class ScriptExecutor(private val listener: TestEngineListener) {
       override val coroutineContext: CoroutineContext,
    ) : TestContext {
 
-      // these are the tests inside this context, so we can track for duplicates
-      private val seen = mutableSetOf<DescriptionName.TestName>()
+      private val handler = DuplicateTestNameHandler(configuration.duplicateTestNameMode)
 
       // in the single instance runner we execute each nested test as soon as they are registered
       override suspend fun registerTestCase(nested: NestedTest) {
-         log("Nested test case discovered $nested")
-         val nestedTestCase = nested.toTestCase(spec = testCase.spec, parent = testCase)
-         if (seen.contains(nested.name))
-            throw DuplicatedTestNameException(nested.name)
-         seen.add(nested.name)
+         log { "Nested test case discovered $nested" }
+         val overrideName = handler.handle(nested.name)?.let { createTestName(it) }
+         val nestedTestCase = nested.toTestCase(testCase.spec, testCase, overrideName)
          runTest(nestedTestCase, coroutineContext)
       }
    }

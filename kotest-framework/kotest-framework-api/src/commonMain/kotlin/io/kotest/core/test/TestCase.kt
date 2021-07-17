@@ -1,7 +1,7 @@
 package io.kotest.core.test
 
 import io.kotest.core.SourceRef
-import io.kotest.core.config.ExperimentalKotest
+import io.kotest.common.ExperimentalKotest
 import io.kotest.core.factory.FactoryId
 import io.kotest.core.internal.tags.allTags
 import io.kotest.core.plan.Descriptor
@@ -61,12 +61,6 @@ data class TestCase(
 
    val displayName = description.displayName()
 
-   /**
-    * Returns true if this test case is a root test inside a spec.
-    */
-   @Deprecated("use description.isRootTest(). Will be removed in 4.6")
-   fun isTopLevel(): Boolean = description.isRootTest()
-
    companion object {
 
       /**
@@ -110,6 +104,7 @@ data class TestCase(
          parent = parent,
       )
 
+      // todo this should move to runtime inside the runners
       fun appendTagsInDisplayName(testCase: TestCase): TestCase {
          val tagNames = testCase.allTags().joinToString(", ")
 

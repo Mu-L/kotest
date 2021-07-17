@@ -9,6 +9,11 @@ module.exports = {
    organizationName: 'kotest', // Usually your GitHub org/user name.
    projectName: 'kotest.io', // Usually your repo name.
    themeConfig: {
+      googleAnalytics: {
+         trackingID: 'UA-177425497-1',
+         // Optional fields.
+         anonymizeIP: true, // Should IPs be anonymized?
+      },
       navbar: {
          title: 'Kotest',
          logo: {
@@ -85,7 +90,7 @@ module.exports = {
                ],
             },
          ],
-         copyright: `Copyright © ${new Date().getFullYear()} Kotest, Inc. Built with Docusaurus.`,
+         copyright: `Copyright © ${new Date().getFullYear()} Kotest Team. Built with Docusaurus.`,
       },
       prism: {
          additionalLanguages: ['kotlin', 'groovy'],

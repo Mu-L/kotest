@@ -10,7 +10,7 @@ import io.kotest.property.RandomSource
  * should be between 0.0 and 1.0 (values outside this range will throw an IllegalArgumentException).
  * Higher values increase the chance of a null being generated.
  *
- * The edgecases will also include the previous arbs edgecases plus a null.
+ * The edge cases will also include the previous [Arb]s edge cases plus a null.
  *
  * @throws IllegalArgumentException when a nullProbability value outside the range of 0.0 to 1.0 is provided.
  * @returns an arb<A?> that can produce null values.
@@ -29,11 +29,10 @@ fun <A> Arb<A>.orNull(nullProbability: Double): Arb<A?> {
  * By default this uses a random boolean so should result in roughly half nulls,
  * half values from the source arb.
  *
- * The edgecases will also include the previous arbs edgecases plus a null.
- *
  * @returns an Arb<A?> that can produce null values.
  */
 fun <A> Arb<A>.orNull(isNextNull: (RandomSource) -> Boolean = { it.random.nextBoolean() }): Arb<A?> =
-   arbitrary(this.edgecases().plus(null as A?)) {
-      if (isNextNull(it)) null else this@orNull.next(it)
-   }
+   arbitrary(
+      edgecaseFn = { this@orNull.edgecase(it) },
+      sampleFn = { if (isNextNull(it)) null else this@orNull.next(it) }
+   )

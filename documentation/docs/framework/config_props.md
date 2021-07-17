@@ -10,16 +10,16 @@ slug: framework-config-props.html
 ```kotlin
 package io.kotest.core.internal
 
-@Deprecated("Renamed to KotestEngineProperties. Will be replaced in 4.7")
-val KotestEngineSystemProperties = KotestEngineProperties
-
 object KotestEngineProperties {
 
+   @Deprecated("Use the val from the spring extension module (io.kotest.extensions:kotest-extensions-spring")
    const val springIgnoreWarning = "kotest.listener.spring.ignore.warning"
 
    const val gradle5 = "kotest.gradle5.compatibility"
 
    const val scriptsEnabled = "kotest.framework.scripts.enabled"
+
+   const val dumpConfig = "kotest.framework.dump.config"
 
    /**
     * Sets the tag expression that determines included/excluded tags.
@@ -60,6 +60,8 @@ object KotestEngineProperties {
 
    const val timeout = "kotest.framework.timeout"
 
+   const val projectTimeout = "kotest.framework.projectTimeout"
+
    const val invocationTimeout = "kotest.framework.invocation.timeout"
 
    const val concurrentSpecs = "kotest.framework.spec.concurrent"
@@ -81,7 +83,7 @@ object KotestEngineProperties {
    /**
     *  If set -> filter testCases by this severity level and higher, else running all
     */
-   const val severityPrefix = "kotest.framework.test.severity"
+   const val testSeverity = "kotest.framework.test.severity"
 
    /**
     * Enable assert softly globally.
@@ -92,5 +94,9 @@ object KotestEngineProperties {
     * Appends all tags associated with a test case to its display name.
     * */
    const val testNameAppendTags = "kotest.framework.testname.append.tags"
+
+   const val duplicateTestNameMode = "kotest.framework.testname.duplicate.mode"
+
+   const val disableJarDiscovery = "kotest.framework.discovery.jar.scan.disable"
 }
 ```
